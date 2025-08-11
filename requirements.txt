@@ -1,0 +1,7 @@
+openai>=1.40.0
+faiss-cpu
+numpy
+tiktoken
+streamlit
+python-dotenv
+pytest
