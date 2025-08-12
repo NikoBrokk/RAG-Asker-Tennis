@@ -30,6 +30,8 @@ def build_corpus():
 
 if __name__ == "__main__":
     corpus = build_corpus()
+    if not corpus:
+        raise SystemExit("Ingen tekst funnet i kb/. Legg inn .md/.txt/.pdf og prøv igjen.")
     Path("data").mkdir(exist_ok=True)
     with open("data/corpus.jsonl", "w", encoding="utf-8") as f:
         for d in corpus: f.write(json.dumps(d, ensure_ascii=False) + "\n")
