@@ -1,8 +1,8 @@
-openai>=1.40.0
-faiss-cpu
-numpy
-tiktoken
-streamlit
-python-dotenv
-pytest
-pypdf
+faiss-cpu==1.11.0.post1
+openai==1.99.9
+numpy==2.3.2
+tiktoken==0.11.0
+streamlit==1.48.0
+python-dotenv==1.1.1
+pytest==8.4.1
+pypdf==6.0.0
