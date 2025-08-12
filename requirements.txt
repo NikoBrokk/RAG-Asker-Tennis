@@ -5,3 +5,4 @@ tiktoken
 streamlit
 python-dotenv
 pytest
+pypdf
