@@ -15,7 +15,9 @@ def embed_batch(texts):
 
 def build_corpus():
     docs = []
-    for path, text in read_markdown_files("kb"):
+    for path, text in read_kb_files("kb"):
+        if not text.strip():
+            continue
         chunks = simple_chunks(text)
         for i, ch in enumerate(chunks):
             docs.append({
