@@ -1,38 +1,36 @@
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from openai import OpenAI
 from src.retrieve import search
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 
-SYSTEM = "Du er en forsiktig assistent. Svar KUN basert på konteksten. Hvis utilstrekkelig, si at du ikke vet."
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+CHAT_MODEL     = os.getenv("CHAT_MODEL", "gpt-4o-mini")
+TEMPERATURE    = float(os.getenv("TEMPERATURE", "0.1"))
 
-def build_prompt(q, hits):
-    ctx = "\n\n".join(f"[{h['id']}]\n{h['text']}" for h in hits)
-    return f"""Bruk kun konteksten til å svare. Siter kilder som [path#chunk].
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-Spørsmål: {q}
+PROMPT_HEADER = (
+    "Du er en kunnskapsrik, høflig assistent for Asker Tennis.\n"
+    "Svar alltid på bokmål, basert på utdragene fra dokumentene. "
+    "Hvis informasjonen ikke finnes i utdragene, si at du ikke vet."
+)
 
-Kontekst:
-{ctx}
-"""
+def build_prompt(q: str, hits):
+    parts = []
+    for i, h in enumerate(hits, 1):
+        parts.append(f"[{h['id']}]\n{h['text']}")
+    context = "\n\n".join(parts)
+    return f"{PROMPT_HEADER}\n\nSpørsmål: {q}\n\nKontekst:\n{context}\n\nSvar:"
 
-def answer(q, k=6):
-    hits = search(q, k=k)
+def answer(q: str, k: int = 6):
+    hits = search(q, k)
     prompt = build_prompt(q, hits)
-    r = client.chat.completions.create(
+    resp = client.chat.completions.create(
         model=CHAT_MODEL,
-        messages=[{"role":"system","content":SYSTEM},
-                  {"role":"user","content":prompt}],
-        temperature=0
+        messages=[{"role": "user", "content": prompt}],
+        temperature=TEMPERATURE,
     )
-    return r.choices[0].message.content, hits
-
-if __name__ == "__main__":
-    import sys, json
-    q = " ".join(sys.argv[1:]) or "Hva er gratisplanens grenser?"
-    text, hits = answer(q)
-    print(text, "\n\nKilder:")
-    for h in hits: print(h["id"], f"(score={h['score']:.3f})")
+    answer_text = resp.choices[0].message.content.strip()
+    return answer_text, hits
