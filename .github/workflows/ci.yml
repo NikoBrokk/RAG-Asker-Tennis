@@ -1,6 +1,7 @@
 name: CI
 on:
-  push: { branches: [ main ] }
+  push:
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -9,19 +10,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with:
+          python-version: '3.11'
+
       - run: pip install -r requirements.txt
+
       - name: Create .env from secrets
-            run: |
-              echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-              echo "EMBED_MODEL=text-embedding-3-small" >> .env
-              echo "CHAT_MODEL=gpt-4o-mini" >> .env
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "EMBED_MODEL=text-embedding-3-small" >> .env
+          echo "CHAT_MODEL=gpt-4o-mini" >> .env
+
       - run: mkdir -p data
+
+      # Kjør ingest/index bare hvis kb/ har filer
       - name: Ingest
+        if: ${{ hashFiles('kb/**') != '' }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python -m src.ingest
+
       - name: Index
+        if: ${{ hashFiles('kb/**') != '' }}
         run: python -m src.index
+
       - name: Tests
         run: pytest -q
