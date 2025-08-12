@@ -1,21 +1,31 @@
-import faiss, numpy as np, json
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
+import pathlib
+import faiss
 
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
+INDEX_PATH = os.getenv("INDEX_PATH", "data/index.faiss")
+_index = None  # lazy-loaded
 
-index = faiss.read_index("data/index.faiss")
-meta = [json.loads(l) for l in open("data/meta.jsonl", encoding="utf-8")]
+def _load_if_exists():
+    p = pathlib.Path(INDEX_PATH)
+    if not p.exists():
+        return None
+    return faiss.read_index(str(p))
 
-def embed(q):
-    v = client.embeddings.create(model=EMBED_MODEL, input=[q]).data[0].embedding
-    v = np.array([v], dtype="float32"); faiss.normalize_L2(v)
-    return v
+def get_index():
+    """Returner en FAISS-indeks. Bygger den hvis mangler."""
+    global _index
+    if _index is not None:
+        return _index
 
-def search(q, k=6):
-    v = embed(q)
-    D, I = index.search(v, k)
-    return [meta[i] | {"score": float(D[0][j])} for j, i in enumerate(I[0])]
+    _index = _load_if_exists()
+    if _index is None:
+        # Bygg i farten (skyen) første gang
+        from src.ingest import build_index
+        _index = build_index()  # sørger for at index skrives til INDEX_PATH
+    return _index
+
+# eksisterende funksjon som brukes av answer.py
+def search(query_embedding, top_k=5):
+    index = get_index()
+    D, I = index.search(query_embedding, top_k)
+    return D, I
