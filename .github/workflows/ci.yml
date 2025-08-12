@@ -11,7 +11,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install -r requirements.txt
-      - run: cp .env.example .env
+      - name: Create .env from secrets
+            run: |
+              echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+              echo "EMBED_MODEL=text-embedding-3-small" >> .env
+              echo "CHAT_MODEL=gpt-4o-mini" >> .env
       - run: mkdir -p data
       - name: Ingest
         env:
