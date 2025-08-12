@@ -3,7 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 import os
-from src.utils import read_markdown_files, simple_chunks
+from src.utils import read_kb_files, simple_chunks
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
