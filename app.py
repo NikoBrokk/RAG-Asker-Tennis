@@ -1,5 +1,14 @@
 import streamlit as st
 from src.answer import answer
+from src.retrieve import get_index
+
+try:
+    get_index()
+except Exception as e:
+    st.error(f"Kunne ikke bygge/lese indeks: {e}")
+    st.stop()
+
+st.title("RAG – Asker Tennis")
 
 st.set_page_config(page_title="RAG Demo", page_icon="🔎", layout="centered")
 st.title("🔎 RAG Demo (GitHub)")
