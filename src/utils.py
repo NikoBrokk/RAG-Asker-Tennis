@@ -1,38 +1,56 @@
-import re
+from __future__ import annotations
 from pathlib import Path
-from pypdf import PdfReader
+from datetime import datetime
+from typing import Iterable, Dict, List
 
-def extract_pdf_text(path: str) -> str:
-    text_parts = []
-    reader = PdfReader(path)
-    for page in reader.pages:
+def read_markdown_files(root_dir: str | Path) -> List[Dict]:
+    """
+    Leser .txt og .md fra rotmappen (rekursivt) og returnerer en liste records:
+    {title, source, text, version_date}
+    - 'Tittel: ...' på første linje overstyrer filnavnet som tittel (hvis finnes).
+    """
+    root = Path(root_dir)
+    records: List[Dict] = []
+    for fp in root.rglob("*"):
+        if not fp.is_file():
+            continue
+        if fp.suffix.lower() not in {".txt", ".md"}:
+            continue
         try:
-            t = page.extract_text() or ""
+            text = fp.read_text(encoding="utf-8", errors="ignore")
         except Exception:
-            t = ""
-        # enkel rens
-        t = t.replace("\u00AD", "")  # myk bindestrek
-        text_parts.append(t.strip())
-    return "\n\n".join(p for p in text_parts if p)
+            # Som nød: binær/annen encoding – hopp over
+            continue
 
-def read_kb_files(root="kb"):
-    """Yield (path, text) for .md/.txt/.pdf."""
-    for p in Path(root).rglob("*"):
-        if p.suffix.lower() in {".md", ".txt"}:
-            yield str(p), p.read_text(encoding="utf-8", errors="ignore")
-        elif p.suffix.lower() == ".pdf":
-            yield str(p), extract_pdf_text(str(p))
+        title = fp.stem
+        # Se etter linje som starter med "Tittel:"
+        for line in text.splitlines():
+            if line.lower().startswith("tittel:"):
+                title = line.split(":", 1)[1].strip() or title
+                break
 
-def simple_chunks(text, max_tokens=700, overlap_tokens=120):
-    paras = re.split(r"\n\s*\n", text.strip())
-    chunks, buf, size = [], [], 0
-    def tok_count(s): return max(1, len(s.split()))
-    for para in paras:
-        t = tok_count(para)
-        if size + t > max_tokens and buf:
-            chunks.append("\n\n".join(buf))
-            overlap = buf[-1:] if overlap_tokens > 0 else []
-            buf, size = overlap[:], tok_count("\n\n".join(overlap))
-        buf.append(para); size += t
-    if buf: chunks.append("\n\n".join(buf))
-    return chunks
+        version_date = datetime.fromtimestamp(fp.stat().st_mtime).strftime("%Y-%m-%d")
+        records.append(
+            {
+                "title": title,
+                "source": str(fp.resolve()),
+                "text": text.strip(),
+                "version_date": version_date,
+            }
+        )
+    return records
+
+def simple_chunks(text: str, chunk_size: int = 800, overlap: int = 100) -> Iterable[str]:
+    """
+    Enkelt overlappende chunking.
+    """
+    if not text:
+        return []
+    n = len(text)
+    start = 0
+    while start < n:
+        end = min(n, start + chunk_size)
+        yield text[start:end]
+        if end == n:
+            break
+        start = max(0, end - overlap)
