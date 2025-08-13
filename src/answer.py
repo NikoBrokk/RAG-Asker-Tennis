@@ -1,36 +1,47 @@
+from __future__ import annotations
 import os
-from dotenv import load_dotenv
-from openai import OpenAI
+from typing import List, Dict
+from src.utils import env_flag
 from src.retrieve import search
 
-load_dotenv()
+USE_OPENAI = env_flag("USE_OPENAI", False)
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-CHAT_MODEL     = os.getenv("CHAT_MODEL", "gpt-4o-mini")
-TEMPERATURE    = float(os.getenv("TEMPERATURE", "0.1"))
+_openai_client = None
+if USE_OPENAI:
+    try:
+        from openai import OpenAI
+        _openai_client = OpenAI()
+    except Exception:
+        _openai_client = None
 
-client = OpenAI(api_key=OPENAI_API_KEY)
-
-PROMPT_HEADER = (
-    "Du er en kunnskapsrik, høflig assistent for Asker Tennis.\n"
-    "Svar alltid på bokmål, basert på utdragene fra dokumentene. "
-    "Hvis informasjonen ikke finnes i utdragene, si at du ikke vet."
+SYSTEM_PROMPT = (
+    "Du er en dokumentassistent for Asker Tennis. Svar kort, presist og høflig. "
+    "Bruk KUN informasjon fra utdragene. Hvis dokumentene ikke dekker spørsmålet, si 'Jeg vet ikke'. "
+    "Alltid på norsk bokmål."
 )
 
-def build_prompt(q: str, hits):
-    parts = []
-    for i, h in enumerate(hits, 1):
-        parts.append(f"[{h['id']}]\n{h['text']}")
-    context = "\n\n".join(parts)
-    return f"{PROMPT_HEADER}\n\nSpørsmål: {q}\n\nKontekst:\n{context}\n\nSvar:"
+def _llm_answer(q: str, hits: List[Dict]) -> str:
+    if _openai_client is None:
+        return _extractive_answer(hits)
+    context = "\n\n".join(f"Utdrag {i+1}:\n{h['text']}" for i, h in enumerate(hits))
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"Spørsmål: {q}\n\nKontekst:\n{context}\n\nSvar kort (6–8 setninger)."},
+    ]
+    resp = _openai_client.chat.completions.create(model=CHAT_MODEL, messages=messages, temperature=0.1)
+    return resp.choices[0].message.content.strip()
+
+def _extractive_answer(hits: List[Dict]) -> str:
+    if not hits:
+        return "Jeg vet ikke."
+    # Bruk første (beste) utdrag
+    return hits[0]["text"].strip()
 
 def answer(q: str, k: int = 6):
     hits = search(q, k)
-    prompt = build_prompt(q, hits)
-    resp = client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=TEMPERATURE,
-    )
-    answer_text = resp.choices[0].message.content.strip()
-    return answer_text, hits
+    if USE_OPENAI:
+        ans = _llm_answer(q, hits[:k])
+    else:
+        ans = _extractive_answer(hits[:k])
+    return ans, hits
