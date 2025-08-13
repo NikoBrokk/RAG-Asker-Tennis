@@ -2,8 +2,18 @@ from __future__ import annotations
 import os
 import re
 from typing import List, Dict, Tuple, Set
+
 from src.utils import env_flag
 from src.retrieve import search
+
+# -------------------------------------------------------------------
+# Configuration
+#
+# Always attempt to use the OpenAI API if a key is configured. The default
+# environment flag USE_OPENAI still controls the behaviour, but the default
+# value is now True in `.env.example`. The chat model can be overridden via
+# the CHAT_MODEL environment variable. When OpenAI is unavailable the app
+# falls back to simple extractive answering.
 
 USE_OPENAI = env_flag("USE_OPENAI", True)
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
@@ -16,12 +26,12 @@ if USE_OPENAI:
     except Exception:
         _openai_client = None
 
+# System prompt instructing the assistant to be friendly and concise.
 SYSTEM_PROMPT = """
-Du er en dokumentassistent for Asker Tennis.
-Svar KUN på det som blir spurt om.
-Bruk maks én kort setning. Returner KUN svaret, uten forklaringer.
-Hvis dokumentene ikke dekker spørsmålet, svar: "Jeg vet ikke".
-Svar på norsk bokmål.
+Du er en vennlig og hjelpsom assistent for Asker Tennis.
+Du svarer på spørsmål basert på innhold i klubbens dokumenter. Svar i
+1–3 korte setninger på norsk, med en personlig og imøtekommende tone.
+Hvis dokumentene ikke dekker spørsmålet, svarer du ærlig at du ikke vet.
 """
 
 # --- Domene-synonymer og hinting ---
@@ -63,6 +73,7 @@ def _first_sentence(text: str) -> str:
 def _extractive_answer(hits: List[Dict]) -> str:
     if not hits:
         return "Jeg vet ikke"
+    # return the first sentence of the top hit as a fallback
     return _first_sentence(hits[0].get("text", "")) or "Jeg vet ikke"
 
 def _score_hit(h: Dict, key_terms: List[str], preferred_types: Set[str]) -> float:
@@ -84,21 +95,39 @@ def _rerank_and_filter(q: str, hits: List[Dict], preferred_types: Set[str], key_
     return (good or [])[:k]
 
 def _llm_answer(q: str, hits: List[Dict]) -> str:
+    """Generate a natural language answer using the OpenAI Chat API.
+
+    We pass up to the top five context passages to provide the model with
+    sufficient background. The prompt encourages the model to synthesise
+    information instead of copying text verbatim and to respond concisely.
+    """
     if _openai_client is None:
         return _extractive_answer(hits)
-    context = "\n\n".join(f"Utdrag {i+1}:\n{h.get('text','')}" for i, h in enumerate(hits[:3]))
+    # build context from the top hits
+    context_chunks = hits[:5]
+    context = "\n\n".join(f"Utdrag {i+1}:\n{h.get('text','')}" for i, h in enumerate(context_chunks))
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",
-         "content": f"Spørsmål: {q}\n\nKontekst (bruk kun hvis relevant):\n{context}\n\nInstruks: Svar i MAKS én kort setning. Returner bare svaret."},
+        {
+            "role": "user",
+            "content": (
+                f"Spørsmål: {q}\n\n"
+                f"Kontekst (bruk kun hvis relevant):\n{context}\n\n"
+                "Instruks: Svar i opptil tre korte setninger. Ikke bare gjenta utdragene, men skriv med egne ord."
+            ),
+        },
     ]
-    resp = _openai_client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages=messages,
-        temperature=0.0,
-        max_tokens=40,
-    )
-    return resp.choices[0].message.content.strip()
+    try:
+        resp = _openai_client.chat.completions.create(
+            model=CHAT_MODEL,
+            messages=messages,
+            temperature=0.2,
+            max_tokens=120,
+        )
+        answer_text = resp.choices[0].message.content.strip()
+    except Exception:
+        return _extractive_answer(hits)
+    return answer_text
 
 def answer(q: str, k: int = 6) -> Tuple[str, List[Dict]]:
     # 1) Query-utvidelse for bedre recall i TF-IDF
