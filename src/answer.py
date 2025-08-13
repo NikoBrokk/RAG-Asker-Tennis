@@ -16,7 +16,7 @@ if USE_OPENAI:
         _openai_client = None
 
 SYSTEM_PROMPT = (
-    SYSTEM_PROMPT = """
+"""
 Du er en dokumentassistent for Asker Tennis.
 Svar KUN på det som blir spurt om.
 Bruk maks én setning.
