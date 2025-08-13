@@ -1,56 +1,53 @@
 from __future__ import annotations
+import os
 from pathlib import Path
+from typing import Dict, List
 from datetime import datetime
-from typing import Iterable, Dict, List
 
-def read_markdown_files(root_dir: str | Path) -> List[Dict]:
-    """
-    Leser .txt og .md fra rotmappen (rekursivt) og returnerer en liste records:
-    {title, source, text, version_date}
-    - 'Tittel: ...' på første linje overstyrer filnavnet som tittel (hvis finnes).
-    """
-    root = Path(root_dir)
-    records: List[Dict] = []
-    for fp in root.rglob("*"):
-        if not fp.is_file():
-            continue
-        if fp.suffix.lower() not in {".txt", ".md"}:
-            continue
-        try:
-            text = fp.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
-            # Som nød: binær/annen encoding – hopp over
-            continue
+def _read_text_file(p: Path) -> str:
+    try:
+        return p.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return p.read_text(encoding="latin-1", errors="ignore")
 
-        title = fp.stem
-        # Se etter linje som starter med "Tittel:"
-        for line in text.splitlines():
-            if line.lower().startswith("tittel:"):
-                title = line.split(":", 1)[1].strip() or title
-                break
-
-        version_date = datetime.fromtimestamp(fp.stat().st_mtime).strftime("%Y-%m-%d")
-        records.append(
-            {
-                "title": title,
-                "source": str(fp.resolve()),
-                "text": text.strip(),
-                "version_date": version_date,
-            }
-        )
-    return records
-
-def simple_chunks(text: str, chunk_size: int = 800, overlap: int = 100) -> Iterable[str]:
-    """
-    Enkelt overlappende chunking.
-    """
-    if not text:
+def read_markdown_files(kb_dir: str) -> List[Dict]:
+    """Les .md og .txt fra kb_dir og returner liste med {title, source, text, version_date}."""
+    root = Path(kb_dir)
+    if not root.exists():
         return []
-    n = len(text)
-    start = 0
-    while start < n:
-        end = min(n, start + chunk_size)
-        yield text[start:end]
-        if end == n:
+    out: List[Dict] = []
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.suffix.lower() not in {".md", ".txt"}:
+            continue
+        text = _read_text_file(p)
+        title = p.stem.replace("_", " ").strip() or "Uten tittel"
+        # enkel versjonsdato: filens mtime
+        version_date = datetime.fromtimestamp(p.stat().st_mtime).date().isoformat()
+        out.append({
+            "title": title,
+            "source": str(p),
+            "text": text,
+            "version_date": version_date,
+        })
+    return out
+
+def simple_chunks(text: str, size: int = 800, overlap: int = 120) -> List[str]:
+    """Glidende vindu over ren tekst – robust for norsk innhold."""
+    if size <= 0: return [text]
+    tokens = text.split()
+    if not tokens: return []
+    chunks: List[str] = []
+    i = 0
+    while i < len(tokens):
+        chunk_tokens = tokens[i:i+size]
+        chunks.append(" ".join(chunk_tokens))
+        if i + size >= len(tokens):
             break
-        start = max(0, end - overlap)
+        i += max(1, size - overlap)
+    return chunks
+
+def env_flag(name: str, default: bool = False) -> bool:
+    v = os.getenv(name, str(default))
+    return str(v).strip().lower() in {"1", "true", "yes", "on"}
