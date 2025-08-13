@@ -12,7 +12,6 @@ KB_DIRS = [Path("kb"), Path("data/processed")]
 CHUNK_SIZE = 700
 CHUNK_OVERLAP = 120
 
-# Globale (enkle) caches i prosessen
 _VEC: Optional[TfidfVectorizer] = None
 _MTX = None  # scipy sparse
 _META: List[Dict] = []  # én entry per rad i _MTX
@@ -27,7 +26,6 @@ def _read_text_file(p: Path) -> str:
         return ""
 
 def _strip_markdown_noise(txt: str) -> str:
-    # Fjern kodeblokker / HTML-kommentarer / overflødig whitespace
     txt = re.sub(r"```.*?```", " ", txt, flags=re.S)
     txt = re.sub(r"<!--.*?-->", " ", txt, flags=re.S)
     txt = re.sub(r"\s+", " ", txt)
@@ -37,7 +35,6 @@ def _title_from_markdown(txt: str, fallback: str) -> str:
     m = re.search(r"^\s*#\s+(.+)$", txt, flags=re.M)
     if m:
         return m.group(1).strip()
-    # Alternativ: første ikke-tomme linje
     for line in txt.splitlines():
         s = line.strip()
         if s:
@@ -77,11 +74,9 @@ def _iter_kb_files() -> Iterable[Path]:
     for d in KB_DIRS:
         if not d.exists():
             continue
-        # markdown
         for p in d.rglob("*.md"):
             if p.is_file():
                 seen.add(p.resolve())
-        # jsonl (data/processed)
         for p in d.rglob("*.jsonl"):
             if p.is_file():
                 seen.add(p.resolve())
@@ -91,25 +86,30 @@ def _iter_kb_files() -> Iterable[Path]:
 def _load_corpus() -> List[Dict]:
     """
     Returnerer en liste med dicts:
-    { "text": ..., "source": ..., "title": ..., "doc_type": ..., "version_date": ... (valgfri) }
+    { "text", "source", "title", "doc_type", "version_date", "page", "chunk_idx", "id" }
     """
     docs: List[Dict] = []
     for p in _iter_kb_files():
+        source_path = str(p).replace("\\", "/")
         if p.suffix.lower() == ".md":
             raw = _read_text_file(p)
             clean = _strip_markdown_noise(raw)
             title = _title_from_markdown(raw, p.stem.replace("-", " "))
             doc_type = _infer_doc_type(p.name, clean)
-            for ch in _chunk(clean):
+            chunks = _chunk(clean)
+            for ci, ch in enumerate(chunks):
                 docs.append({
                     "text": ch,
-                    "source": str(p).replace("\\", "/"),
+                    "source": source_path,
                     "title": title,
                     "doc_type": doc_type,
                     "version_date": None,
+                    "page": None,
+                    "chunk_idx": ci,
+                    "id": f"{source_path}#{ci}",
                 })
         elif p.suffix.lower() == ".jsonl":
-            # Forvent format per linje: {"text": "...", "metadata": {...}}
+            ci = 0
             for line in _read_text_file(p).splitlines():
                 line = line.strip()
                 if not line:
@@ -122,15 +122,22 @@ def _load_corpus() -> List[Dict]:
                 meta = obj.get("metadata", {})
                 if not txt.strip():
                     continue
+                txt_clean = _strip_markdown_noise(txt)
                 title = meta.get("title") or _title_from_markdown(txt, Path(meta.get("source", p.stem)).stem)
                 doc_type = meta.get("doc_type") or _infer_doc_type(title, txt)
+                src = (meta.get("source") or source_path).replace("\\", "/")
+                page = meta.get("page")
                 docs.append({
-                    "text": _strip_markdown_noise(txt),
-                    "source": meta.get("source") or str(p).replace("\\", "/"),
+                    "text": txt_clean,
+                    "source": src,
                     "title": title,
                     "doc_type": doc_type,
                     "version_date": meta.get("version_date"),
+                    "page": page,
+                    "chunk_idx": ci,
+                    "id": f"{src}#{ci}",
                 })
+                ci += 1
     return docs
 
 
@@ -146,7 +153,6 @@ def _ensure_index() -> None:
 
     texts = [d["text"] for d in corpus]
     if not texts:
-        # Tomt korpus; bygg en dummy-vektorizer
         _VEC = TfidfVectorizer(ngram_range=(1, 2), max_features=1000)
         _MTX = _VEC.fit_transform([""])
         return
@@ -169,7 +175,7 @@ def _ensure_index() -> None:
 def search(query: str, k: int = 6) -> List[Dict]:
     """
     Returnerer topp k treff som liste av dicts:
-    { "text", "source", "title", "score", "doc_type", "version_date" }
+    { "text", "source", "title", "score", "doc_type", "version_date", "page", "chunk_idx", "id" }
     """
     _ensure_index()
     if _VEC is None or _MTX is None or not _META:
@@ -194,6 +200,9 @@ def search(query: str, k: int = 6) -> List[Dict]:
             "title": m["title"],
             "doc_type": m.get("doc_type"),
             "version_date": m.get("version_date"),
+            "page": m.get("page"),
+            "chunk_idx": m.get("chunk_idx"),
+            "id": m.get("id"),
             "score": float(sims[i]),
         })
     return hits
