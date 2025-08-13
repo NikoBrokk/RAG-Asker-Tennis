@@ -1,11 +1,8 @@
-numpy==2.3.2
+numpy<2.0
 streamlit==1.48.0
 python-dotenv==1.0.1
 pypdf==6.0.0
 pytest==8.3.3
-# TF‑IDF / ML
 scikit-learn==1.4.2
-# Valgfritt, men anbefalt for raskt søk
 faiss-cpu==1.8.0.post1
-# Kun hvis du vil bruke OpenAI‑modus
 openai==1.40.6
