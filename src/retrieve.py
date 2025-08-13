@@ -1,208 +1,137 @@
 from __future__ import annotations
 import json
 import os
-import re
+import pickle
 from pathlib import Path
-from typing import Dict, List, Tuple, Iterable, Optional
+from typing import Dict, List, Tuple, Optional
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
+import numpy as np
+from src.utils import env_flag
 
-KB_DIRS = [Path("kb"), Path("data/processed")]
-CHUNK_SIZE = 700
-CHUNK_OVERLAP = 120
+try:
+    import faiss  # type: ignore
+except Exception:
+    faiss = None  # vi faller tilbake til ren numpy hvis FAISS ikke finnes
 
-_VEC: Optional[TfidfVectorizer] = None
-_MTX = None  # scipy sparse
-_META: List[Dict] = []  # én entry per rad i _MTX
+# Les konfig fra miljø
+DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+USE_OPENAI = env_flag("USE_OPENAI", False)
+EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
 
+# Filstier
+VEC_PATH = DATA_DIR / "vectors.npy"
+META_PATH = DATA_DIR / "meta.jsonl"
+VECTORIZER_PATH = DATA_DIR / "vectorizer.pkl"
+INDEX_PATH = DATA_DIR / "index.faiss"
 
-# ---------- Utils ----------
-
-def _read_text_file(p: Path) -> str:
+# Valgfri OpenAI-klient (kun brukt når USE_OPENAI=True)
+_openai = None
+if USE_OPENAI:
     try:
-        return p.read_text(encoding="utf-8", errors="ignore")
+        from openai import OpenAI
+        _openai = OpenAI()
     except Exception:
-        return ""
+        _openai = None  # ved feil går vi over til TF‑IDF-modus
 
-def _strip_markdown_noise(txt: str) -> str:
-    txt = re.sub(r"```.*?```", " ", txt, flags=re.S)
-    txt = re.sub(r"<!--.*?-->", " ", txt, flags=re.S)
-    txt = re.sub(r"\s+", " ", txt)
-    return txt.strip()
-
-def _title_from_markdown(txt: str, fallback: str) -> str:
-    m = re.search(r"^\s*#\s+(.+)$", txt, flags=re.M)
-    if m:
-        return m.group(1).strip()
-    for line in txt.splitlines():
-        s = line.strip()
-        if s:
-            return s[:120]
-    return fallback
-
-def _infer_doc_type(name: str, text: str) -> str:
-    low = (name + " " + text[:400]).lower()
-    if any(w in low for w in ["vilkår", "terms", "betingelser", "angrerett", "personvern", "gdpr", "privacy"]):
-        return "regel"
-    if any(w in low for w in ["pris", "timepris", "avgift", "kontingent", "kostnad", "rabatt"]):
-        return "pris"
-    if any(w in low for w in ["booking", "banebooking", "reserver", "matchi", "baneregler"]):
-        return "booking"
-    if any(w in low for w in ["håndbok"]):
-        return "håndbok"
-    return "annet"
-
-def _chunk(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
-    text = text.strip()
-    if not text:
-        return []
-    chunks = []
-    i = 0
-    n = len(text)
-    while i < n:
-        j = min(i + size, n)
-        chunk = text[i:j]
-        chunks.append(chunk)
-        if j == n:
-            break
-        i = max(j - overlap, 0)
-    return chunks
-
-def _iter_kb_files() -> Iterable[Path]:
-    seen = set()
-    for d in KB_DIRS:
-        if not d.exists():
-            continue
-        for p in d.rglob("*.md"):
-            if p.is_file():
-                seen.add(p.resolve())
-        for p in d.rglob("*.jsonl"):
-            if p.is_file():
-                seen.add(p.resolve())
-    for p in sorted(seen):
-        yield Path(p)
-
-def _load_corpus() -> List[Dict]:
+def _load() -> Tuple[np.ndarray, List[Dict], Optional[Dict[str, int]], Optional[Dict[str, float]]]:
     """
-    Returnerer en liste med dicts:
-    { "text", "source", "title", "doc_type", "version_date", "page", "chunk_idx", "id" }
+    Leser inn vektorene, metadata og TF‑IDF-ordbok hvis den finnes.
     """
-    docs: List[Dict] = []
-    for p in _iter_kb_files():
-        source_path = str(p).replace("\\", "/")
-        if p.suffix.lower() == ".md":
-            raw = _read_text_file(p)
-            clean = _strip_markdown_noise(raw)
-            title = _title_from_markdown(raw, p.stem.replace("-", " "))
-            doc_type = _infer_doc_type(p.name, clean)
-            chunks = _chunk(clean)
-            for ci, ch in enumerate(chunks):
-                docs.append({
-                    "text": ch,
-                    "source": source_path,
-                    "title": title,
-                    "doc_type": doc_type,
-                    "version_date": None,
-                    "page": None,
-                    "chunk_idx": ci,
-                    "id": f"{source_path}#{ci}",
-                })
-        elif p.suffix.lower() == ".jsonl":
-            ci = 0
-            for line in _read_text_file(p).splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    obj = json.loads(line)
-                except Exception:
-                    continue
-                txt = obj.get("text", "")
-                meta = obj.get("metadata", {})
-                if not txt.strip():
-                    continue
-                txt_clean = _strip_markdown_noise(txt)
-                title = meta.get("title") or _title_from_markdown(txt, Path(meta.get("source", p.stem)).stem)
-                doc_type = meta.get("doc_type") or _infer_doc_type(title, txt)
-                src = (meta.get("source") or source_path).replace("\\", "/")
-                page = meta.get("page")
-                docs.append({
-                    "text": txt_clean,
-                    "source": src,
-                    "title": title,
-                    "doc_type": doc_type,
-                    "version_date": meta.get("version_date"),
-                    "page": page,
-                    "chunk_idx": ci,
-                    "id": f"{src}#{ci}",
-                })
-                ci += 1
-    return docs
+    if not VEC_PATH.exists() or not META_PATH.exists():
+        raise FileNotFoundError("Manglende indeksfiler – kjør ingest.py først.")
 
+    vectors = np.load(VEC_PATH)  # shape (n_chunks, dim)
+    meta: List[Dict] = []
+    with META_PATH.open("r", encoding="utf-8") as f:
+        for line in f:
+            meta.append(json.loads(line))
 
-# ---------- Index bygging ----------
+    vocab: Optional[Dict[str, int]] = None
+    idf: Optional[Dict[str, float]] = None
+    # Kun i TF‑IDF-modus lagres vectorizer.pkl
+    if not USE_OPENAI and VECTORIZER_PATH.exists():
+        with VECTORIZER_PATH.open("rb") as vf:
+            obj = pickle.load(vf)
+            # Objektet kan være dict {"vocab": ..., "idf": ...}
+            # eller en TfidfVectorizer – støtt begge
+            if isinstance(obj, dict):
+                vocab, idf = obj["vocab"], obj["idf"]
+            else:
+                vocab = getattr(obj, "vocabulary_", None)
+                idf_array = getattr(obj, "idf_", None)
+                if vocab is not None and idf_array is not None:
+                    # Konverter idf-array til dict med samme rekkefølge som vokabularet
+                    idf = {token: float(idf_array[idx]) for token, idx in vocab.items()}
+    return vectors, meta, vocab, idf
 
-def _ensure_index() -> None:
-    global _VEC, _MTX, _META
-    if _VEC is not None and _MTX is not None and _META:
-        return
+# Enkel tokenisering (brukes bare i TF‑IDF-modus)
+import re
+_TOKEN_RE = re.compile(r"\b\w+\b", re.UNICODE)
+def _tokenize(text: str) -> List[str]:
+    return _TOKEN_RE.findall(text.lower())
 
-    corpus = _load_corpus()
-    _META = corpus
+def _embed_query_tfidf(q: str, vocab: Dict[str, int], idf: Dict[str, float]) -> np.ndarray:
+    toks = _tokenize(q)
+    vec = np.zeros(len(vocab), dtype="float32")
+    tf: Dict[str, int] = {}
+    for t in toks:
+        if t in vocab:
+            tf[t] = tf.get(t, 0) + 1
+    for t, c in tf.items():
+        j = vocab[t]
+        vec[j] = float(c) * idf.get(t, 0.0)
+    norm = np.linalg.norm(vec) + 1e-12
+    return vec / norm
 
-    texts = [d["text"] for d in corpus]
-    if not texts:
-        _VEC = TfidfVectorizer(ngram_range=(1, 2), max_features=1000)
-        _MTX = _VEC.fit_transform([""])
-        return
+def _embed_query_openai(q: str) -> np.ndarray:
+    if _openai is None:
+        raise RuntimeError("OpenAI ikke tilgjengelig – sjekk USE_OPENAI og API-nøkkel.")
+    r = _openai.embeddings.create(model=EMBED_MODEL, input=q)
+    vec = np.array(r.data[0].embedding, dtype="float32")
+    norm = np.linalg.norm(vec) + 1e-12
+    return vec / norm
 
-    _VEC = TfidfVectorizer(
-        ngram_range=(1, 2),
-        max_df=0.95,
-        min_df=1,
-        strip_accents="unicode",
-        lowercase=True,
-        norm="l2",
-        sublinear_tf=True,
-        max_features=60000,
-    )
-    _MTX = _VEC.fit_transform(texts)
-
-
-# ---------- Public API ----------
-
-def search(query: str, k: int = 6) -> List[Dict]:
+def _topk(vectors: np.ndarray, qvec: np.ndarray, k: int) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Returnerer topp k treff som liste av dicts:
-    { "text", "source", "title", "score", "doc_type", "version_date", "page", "chunk_idx", "id" }
+    Returnerer indeksene og poengene til de k mest relevante treffene.
+    Bruker FAISS hvis tilgjengelig for raskere søk; ellers numpy dot.
     """
-    _ensure_index()
-    if _VEC is None or _MTX is None or not _META:
+    if faiss is not None and INDEX_PATH.exists():
+        # Last inn FAISS-indeksen én gang og bruk til søk
+        index = faiss.read_index(str(INDEX_PATH))
+        scores, inds = index.search(qvec.reshape(1, -1), k)
+        return inds[0], scores[0]
+    # Fallback: dot-produkt
+    sims = vectors @ qvec
+    order = np.argsort(-sims)[:k]
+    return order, sims[order]
+
+def search(q: str, k: int = 6) -> List[Dict]:
+    """
+    Søker i vektorindeksen og returnerer en liste med de k beste treffene.
+    Hvert treff inneholder metadata fra meta.jsonl samt en ekstra 'score'.
+    """
+    vectors, meta, vocab, idf = _load()
+    if not meta:
         return []
 
-    q = (query or "").strip()
-    if not q:
-        return []
+    # Velg embedding-metode basert på USE_OPENAI
+    if USE_OPENAI and _openai is not None:
+        qvec = _embed_query_openai(q)
+    else:
+        if vocab is None or idf is None:
+            # Hvis vi mangler TF‑IDF-data må vi avbryte
+            raise RuntimeError("TF‑IDF-data ikke tilgjengelig – kjør ingest.py.")
+        qvec = _embed_query_tfidf(q, vocab, idf)
 
-    qvec = _VEC.transform([q])
-    sims = linear_kernel(qvec, _MTX).ravel()
-    if sims.size == 0:
-        return []
-
-    idx = sims.argsort()[::-1][: max(k, 1)]
+    inds, scores = _topk(vectors, qvec, max(k, 1))
     hits: List[Dict] = []
-    for i in idx:
-        m = _META[i]
-        hits.append({
-            "text": m["text"],
-            "source": m["source"],
-            "title": m["title"],
-            "doc_type": m.get("doc_type"),
-            "version_date": m.get("version_date"),
-            "page": m.get("page"),
-            "chunk_idx": m.get("chunk_idx"),
-            "id": m.get("id"),
-            "score": float(sims[i]),
-        })
+    for idx, score in zip(inds, scores):
+        if idx < 0 or idx >= len(meta):
+            continue
+        m = meta[idx]
+        # Lag kopi av metadata og legg til score (float)
+        out = dict(m)
+        out["score"] = float(score)
+        hits.append(out)
     return hits
