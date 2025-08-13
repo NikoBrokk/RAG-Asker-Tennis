@@ -16,9 +16,15 @@ if USE_OPENAI:
         _openai_client = None
 
 SYSTEM_PROMPT = (
-    "Du er en dokumentassistent for Asker Tennis. Svar kort, presist og høflig. "
-    "Bruk KUN informasjon fra utdragene. Hvis dokumentene ikke dekker spørsmålet, si 'Jeg vet ikke'. "
-    "Alltid på norsk bokmål."
+    SYSTEM_PROMPT = """
+Du er en dokumentassistent for Asker Tennis.
+Svar KUN på det som blir spurt om.
+Bruk maks én setning.
+Ikke ta med unødvendig kontekst, innledninger eller lovtekst.
+Hvis dokumentene ikke dekker spørsmålet, si: "Jeg vet ikke".
+Alltid inkluder kilder (tittel, fil/URL, side/dato hvis relevant).
+Svar på norsk bokmål.
+"""
 )
 
 def _llm_answer(q: str, hits: List[Dict]) -> str:
