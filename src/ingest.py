@@ -75,7 +75,7 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                     "version_date": obj.get("metadata", {}).get("version_date"),
                     "page": obj.get("metadata", {}).get("page"),
                     "chunk_idx": ci,
-                    "id": f"{str(src).replace('\\','/') }#{ci}",
+                    "id": f"{Path(src).as_posix()}#{ci}",
                 })
                 ci += 1
     return out
