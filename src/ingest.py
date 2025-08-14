@@ -43,16 +43,17 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                 continue
             chunks = [clean[i:i+700] for i in range(0, len(clean), 700-120)]
             for ci, ch in enumerate(chunks):
-                out.append({
-                    "text": ch,
-                    "source": str(p).replace("\\", "/"),
-                    "title": p.stem.replace("-", " "),
-                    "doc_type": None,
-                    "version_date": None,
-                    "page": None,
-                    "chunk_idx": ci,
-                    "id": f"{p.as_posix()}#{ci}",
-                })
+        out.append({
+            "text": ch,
+            "source": str(p).replace("\\", "/"),
+            "title": p.stem.replace("-", " "),
+            "doc_type": None,
+            "version_date": None,
+            "page": None,
+            "chunk_idx": ci,
+            # Unngå backslash i f‑streng‑uttrykk; as_posix() gir alltid '/'.
+            "id": f"{p.as_posix()}#{ci}",
+        })
         else:
             ci = 0
             for line in _read_text_file(p).splitlines():
@@ -101,14 +102,33 @@ def _build_openai_embeddings(chunks: List[Dict]) -> np.ndarray:
 
 def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
     from sklearn.feature_extraction.text import TfidfVectorizer
-    texts = [d["text"] for d in chunks] or [""]
-    vec = TfidfVectorizer(ngram_range=(1, 2), max_df=0.95, strip_accents="unicode", lowercase=True, norm="l2", sublinear_tf=True, max_features=60000)
-    mtx = vec.fit_transform(texts)
-    # lagre som dense for enkelhets skyld (liten KB)
-    dense = (mtx / (np.linalg.norm(mtx.A, axis=1, keepdims=True) + 1e-12)).A.astype("float32")
+    import numpy as np
     import pickle
+
+    # Trekk ut tekstene, fallback til tom streng hvis listen er tom
+    texts = [d["text"] for d in chunks] or [""]
+
+    vec = TfidfVectorizer(
+        ngram_range=(1, 2),
+        max_df=0.95,
+        strip_accents="unicode",
+        lowercase=True,
+        norm="l2",
+        sublinear_tf=True,
+        max_features=60000,
+    )
+
+    mtx = vec.fit_transform(texts)  # csr_matrix
+
+    # Konverter til ndarray og rad-normaliser
+    dense = mtx.toarray()
+    norms = np.linalg.norm(dense, axis=1, keepdims=True)
+    dense = (dense / (norms + 1e-12)).astype("float32")
+
+    # Lagre vectorizer for gjenbruk i index/retrieve
     with (DATA_DIR / "vectorizer.pkl").open("wb") as f:
         pickle.dump(vec, f)
+
     return dense, vec
 
 def _maybe_write_faiss(vectors: np.ndarray) -> None:
