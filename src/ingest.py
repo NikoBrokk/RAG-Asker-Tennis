@@ -51,7 +51,7 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                     "version_date": None,
                     "page": None,
                     "chunk_idx": ci,
-                    "id": f"{str(p).replace('\\','/') }#{ci}",
+                    "id": f"{p.as_posix()}#{ci}",
                 })
         else:
             ci = 0
