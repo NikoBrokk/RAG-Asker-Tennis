@@ -150,9 +150,10 @@ def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.nda
             v = v / (np.linalg.norm(v) + 1e-12)
             vecs.append(v)
     if not vecs:
-        # tomt korpus – default dimensjon 1536 (text-embedding-3-small)
+        # tomt korpus → default dimensjon 1536
         return np.zeros((0, 1536), dtype="float32")
     return np.vstack(vecs)
+
 
 def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
     from sklearn.feature_extraction.text import TfidfVectorizer
