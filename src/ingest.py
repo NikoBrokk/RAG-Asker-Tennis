@@ -59,13 +59,13 @@ def _read_text_file(p: Path) -> str:
 def _strip(txt: str) -> str:
     # fjern codefences og komprimer whitespace
     txt = re.sub(r"```.*?```", " ", txt, flags=re.S)
-    txt = re.sub(r"\s", " ", txt)
+    txt = re.sub(r"\s+", " ", txt)
     return txt.strip()
 
 def _iter_docs(kb_root: Path) -> List[Dict]:
     out: List[Dict] = []
 
-    for p in sorted(list(kb_root.rglob("*.md"))  list(Path("data/processed").rglob("*.jsonl"))):
+    for p in sorted(list(kb_root.rglob("*.md")) + list(Path("data/processed").rglob("*.jsonl"))):
         if not p.is_file():
             continue
 
@@ -75,7 +75,7 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
             if not clean:
                 continue
 
-            chunks = [clean[i:i  700] for i in range(0, len(clean), 700 - 120)]
+            chunks = [clean[i:i + 700] for i in range(0, len(clean), 700 - 120)]
             for ci, ch in enumerate(chunks):
                 out.append({
                     "text": ch,
@@ -114,7 +114,7 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                     "chunk_idx": ci,
                     "id": f"{Path(src).as_posix()}#{ci}",
                 })
-                ci = 1
+                ci += 1
 
     return out
 
@@ -123,18 +123,18 @@ def _save_meta(meta: List[Dict]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with (DATA_DIR / "meta.jsonl").open("w", encoding="utf-8") as f:
         for m in meta:
-            f.write(json.dumps(m, ensure_ascii=False)  "\n")
+            f.write(json.dumps(m, ensure_ascii=False) + "\n")
 
 def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.ndarray:
     """Bygg normaliserte embeddings med batching."""
     texts = [d["text"] for d in chunks]
     vecs: List[np.ndarray] = []
     for i in range(0, len(texts), batch_size):
-        batch = texts[i:i  batch_size]
+        batch = texts[i:i + batch_size]
         r = client.embeddings.create(model=EMBED_MODEL, input=batch)
         for item in r.data:
             v = np.asarray(item.embedding, dtype="float32")
-            v = v / (np.linalg.norm(v)  1e-12)
+            v = v / (np.linalg.norm(v) + 1e-12)
             vecs.append(v)
     if not vecs:
         # tomt korpus – default dimensjon 1536 (text-embedding-3-small)
@@ -159,7 +159,7 @@ def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
     mtx = vec.fit_transform(texts)
     dense = mtx.toarray()
     norms = np.linalg.norm(dense, axis=1, keepdims=True)
-    dense = (dense / (norms  1e-12)).astype("float32")
+    dense = (dense / (norms + 1e-12)).astype("float32")
 
     with (DATA_DIR / "vectorizer.pkl").open("wb") as f:
         pickle.dump(vec, f)
