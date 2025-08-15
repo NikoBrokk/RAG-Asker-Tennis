@@ -18,12 +18,20 @@ CHAT_MODEL = os.getenv("CHAT_MODEL", st.secrets.get("CHAT_MODEL", "gpt-4o-mini" 
 DATA_DIR = Path(os.getenv("DATA_DIR", st.secrets.get("DATA_DIR", "data")))
 KB_DIR = os.getenv("KB_DIR", st.secrets.get("KB_DIR", "kb"))
 
+from src.ingest import build_index, OPENAI_API_KEY
+
 # Bygg indeksen hvis den mangler
 def ensure_index():
     vec = DATA_DIR / "vectors.npy"
     meta = DATA_DIR / "meta.jsonl"
+
+    # Sjekk for OpenAI API-nøkkel hvis USE_OPENAI er aktivert
+    if USE_OPENAI and not OPENAI_API_KEY:
+        st.error("Kan ikke bygge indeks – OPENAI_API_KEY mangler. "
+                 "Sett den i .env-filen eller i Streamlit Secrets.")
+        st.stop()
+
     if not vec.exists() or not meta.exists():
-        from src.ingest import build_index
         st.info("Indeks mangler – bygger nå …")
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         build_index(KB_DIR)
