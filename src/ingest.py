@@ -1,6 +1,9 @@
+diff --git a/src/ingest.py b/src/ingest.py
+--- a/src/ingest.py
+ b/src/ingest.py
+@@ -1,0 1,246 @@
 from __future__ import annotations
-import json
-import os
+import json, os, re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -9,17 +12,48 @@ import numpy as np
 from src.utils import env_flag
 
 try:
+    import streamlit as st  # type: ignore
+except Exception:
+    st = None
+
+try:
     import faiss  # type: ignore
 except Exception:
     faiss = None
 
-USE_OPENAI = env_flag("USE_OPENAI", False)
-EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
-DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
-KB_DIR_DEFAULT = os.getenv("KB_DIR", "kb")
+from dotenv import load_dotenv
+from openai import OpenAI
 
-# --------- Korpushjelpere (gjenbruker logikken fra retrieve) ----------
-import re
+load_dotenv()
+
+def _get_secret(name: str) -> str | None:
+    """Hent verdi fra Streamlit Secrets eller miljøvariabel; trim whitespace."""
+    val = None
+    if st and hasattr(st, "secrets") and name in st.secrets:
+        val = st.secrets[name]
+    if val is None:
+        val = os.getenv(name)
+    return val.strip() if isinstance(val, str) else val
+
+# ---------- Konfig ----------
+# Tving OpenAI som default i Cloud; kan overstyres via USE_OPENAI=0
+USE_OPENAI = env_flag("USE_OPENAI", True)
+EMBED_MODEL = _get_secret("EMBED_MODEL") or "text-embedding-3-small"
+DATA_DIR = Path(_get_secret("DATA_DIR") or "data")
+KB_DIR_DEFAULT = _get_secret("KB_DIR") or "kb"
+
+# ---------- OpenAI-klient på modulnivå ----------
+OPENAI_API_KEY = _get_secret("OPENAI_API_KEY")
+OPENAI_PROJECT = _get_secret("OPENAI_PROJECT")  # valgfri (for sk-proj-… nøkler)
+if not OPENAI_API_KEY:
+    msg = ("Mangler/ugyldig `OPENAI_API_KEY`. "
+           "Legg inn nøkkelen i Streamlit Secrets eller `.env`.")
+    if st:
+        st.error(msg)
+    raise RuntimeError(msg)
+client = OpenAI(api_key=OPENAI_API_KEY, project=OPENAI_PROJECT or None)
+
+# ---------- Korpushjelpere (gjenbruker logikken fra retrieve) ----------
 def _read_text_file(p: Path) -> str:
     try:
         return p.read_text(encoding="utf-8", errors="ignore")
@@ -27,14 +61,15 @@ def _read_text_file(p: Path) -> str:
         return ""
 
 def _strip(txt: str) -> str:
+    # fjern codefences og komprimer whitespace
     txt = re.sub(r"```.*?```", " ", txt, flags=re.S)
-    txt = re.sub(r"\s+", " ", txt)
+    txt = re.sub(r"\s", " ", txt)
     return txt.strip()
 
 def _iter_docs(kb_root: Path) -> List[Dict]:
     out: List[Dict] = []
 
-    for p in sorted(list(kb_root.rglob("*.md")) + list(Path("data/processed").rglob("*.jsonl"))):
+    for p in sorted(list(kb_root.rglob("*.md"))  list(Path("data/processed").rglob("*.jsonl"))):
         if not p.is_file():
             continue
 
@@ -44,7 +79,7 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
             if not clean:
                 continue
 
-            chunks = [clean[i:i + 700] for i in range(0, len(clean), 700 - 120)]
+            chunks = [clean[i:i  700] for i in range(0, len(clean), 700 - 120)]
             for ci, ch in enumerate(chunks):
                 out.append({
                     "text": ch,
@@ -83,28 +118,32 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                     "chunk_idx": ci,
                     "id": f"{Path(src).as_posix()}#{ci}",
                 })
-                ci += 1
+                ci = 1
 
     return out
 
-# --------- OpenAI-embeddings eller TF-IDF til disk ----------
+# ---------- OpenAI-embeddings eller TF-IDF til disk ----------
 def _save_meta(meta: List[Dict]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with (DATA_DIR / "meta.jsonl").open("w", encoding="utf-8") as f:
         for m in meta:
-            f.write(json.dumps(m, ensure_ascii=False) + "\n")
+            f.write(json.dumps(m, ensure_ascii=False)  "\n")
 
-def _build_openai_embeddings(chunks: List[Dict]) -> np.ndarray:
-    from openai import OpenAI
-    client = OpenAI()
+def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.ndarray:
+    """Bygg normaliserte embeddings med batching."""
+    texts = [d["text"] for d in chunks]
     vecs: List[np.ndarray] = []
-    for d in chunks:
-        r = client.embeddings.create(model=EMBED_MODEL, input=d["text"])
-        v = np.array(r.data[0].embedding, dtype="float32")
-        v = v / (np.linalg.norm(v) + 1e-12)
-        vecs.append(v)
-    arr = np.vstack(vecs) if vecs else np.zeros((0, 1536), dtype="float32")
-    return arr
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i  batch_size]
+        r = client.embeddings.create(model=EMBED_MODEL, input=batch)
+        for item in r.data:
+            v = np.asarray(item.embedding, dtype="float32")
+            v = v / (np.linalg.norm(v)  1e-12)
+            vecs.append(v)
+    if not vecs:
+        # tomt korpus – default dimensjon 1536 (text-embedding-3-small)
+        return np.zeros((0, 1536), dtype="float32")
+    return np.vstack(vecs)
 
 def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -124,7 +163,7 @@ def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
     mtx = vec.fit_transform(texts)
     dense = mtx.toarray()
     norms = np.linalg.norm(dense, axis=1, keepdims=True)
-    dense = (dense / (norms + 1e-12)).astype("float32")
+    dense = (dense / (norms  1e-12)).astype("float32")
 
     with (DATA_DIR / "vectorizer.pkl").open("wb") as f:
         pickle.dump(vec, f)
@@ -146,10 +185,10 @@ def build_index(kb_dir: str | Path = KB_DIR_DEFAULT) -> None:
         np.save(DATA_DIR / "vectors.npy", vectors)
         _save_meta(chunks)
         _maybe_write_faiss(vectors)
-        print(f"[ingest] OpenAI-embeddings for {len(chunks)} biter skrevet til data/vectors.npy og data/meta.jsonl.")
+        print(f"[ingest] OpenAI-embeddings for {len(chunks)} biter skrevet til {DATA_DIR}/vectors.npy og {DATA_DIR}/meta.jsonl.")
     else:
         vectors, _ = _build_tfidf_dense(chunks)
         np.save(DATA_DIR / "vectors.npy", vectors)
         _save_meta(chunks)
         _maybe_write_faiss(vectors)
-        print(f"[ingest] TF-IDF vektorer for {len(chunks)} biter skrevet til data/vectors.npy og data/meta.jsonl.")
+        print(f"[ingest] TF-IDF vektorer for {len(chunks)} biter skrevet til {DATA_DIR}/vectors.npy og {DATA_DIR}/meta.jsonl.")
