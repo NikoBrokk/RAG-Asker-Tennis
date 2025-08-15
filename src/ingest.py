@@ -2,6 +2,8 @@ from __future__ import annotations
 import json, os, re
 from pathlib import Path
 from typing import Dict, List, Tuple
+from openai import AuthenticationError
+
 
 import numpy as np
 
@@ -159,7 +161,7 @@ def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.nda
                 model=EMBED_MODEL,
                 input=batch
             )
-        except openai.error.AuthenticationError:
+        except AuthenticationError:
             msg = "Feil ved autentisering mot OpenAI – sjekk API-nøkkelen."
             if st:
                 st.error(msg)
