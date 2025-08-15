@@ -1,7 +1,3 @@
-diff --git a/src/ingest.py b/src/ingest.py
---- a/src/ingest.py
- b/src/ingest.py
-@@ -1,0 1,246 @@
 from __future__ import annotations
 import json, os, re
 from pathlib import Path
