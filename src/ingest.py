@@ -23,13 +23,26 @@ from openai import OpenAI
 load_dotenv()
 
 def _get_secret(name: str) -> str | None:
-    """Hent verdi fra Streamlit Secrets eller miljøvariabel; trim whitespace."""
-    val = None
-    if st and hasattr(st, "secrets") and name in st.secrets:
-        val = st.secrets[name]
-    if val is None:
-        val = os.getenv(name)
-    return val.strip() if isinstance(val, str) else val
+    """
+    Hent verdi fra miljøvariabel eller Streamlit Secrets – trygt i CI.
+    - Foretrekker ENV først (CI/GHA setter ofte env direkte).
+    - Aksess til st.secrets kapsles i try/except siden bare *berøring* kan kaste
+      StreamlitSecretNotFoundError hvis secrets.toml ikke finnes.
+    """
+    # 1) ENV først
+    val = os.getenv(name)
+    if isinstance(val, str) and val.strip():
+        return val.strip()
+    # 2) Streamlit Secrets (best effort)
+    try:
+        import streamlit as _st  # lokal import for å unngå sideeffekter
+        try:
+            sval = _st.secrets[name]  # kan kaste KeyError/StreamlitSecretNotFoundError
+            return sval.strip() if isinstance(sval, str) else sval
+        except Exception:
+            return None
+    except Exception:
+        return None
 
 # ---------- Konfig ----------
 # Tving OpenAI som default i Cloud; kan overstyres via USE_OPENAI=0
