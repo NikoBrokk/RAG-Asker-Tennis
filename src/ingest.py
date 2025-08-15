@@ -139,19 +139,45 @@ def _save_meta(meta: List[Dict]) -> None:
             f.write(json.dumps(m, ensure_ascii=False) + "\n")
 
 def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.ndarray:
-    """Bygg normaliserte embeddings med batching."""
+    """Bygg normaliserte embeddings med batching og bedre feilhåndtering."""
+    if not OPENAI_API_KEY:
+        msg = (
+            "OPENAI_API_KEY mangler eller er ugyldig. "
+            "Sett den i .env-filen eller i Streamlit Secrets."
+        )
+        if st:
+            st.error(msg)
+        raise RuntimeError(msg)
+
     texts = [d["text"] for d in chunks]
     vecs: List[np.ndarray] = []
+
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
-        r = client.embeddings.create(model=EMBED_MODEL, input=batch)
+        try:
+            r = client.embeddings.create(
+                model=EMBED_MODEL,
+                input=batch
+            )
+        except openai.error.AuthenticationError:
+            msg = "Feil ved autentisering mot OpenAI – sjekk API-nøkkelen."
+            if st:
+                st.error(msg)
+            raise RuntimeError(msg)
+        except Exception as e:
+            msg = f"Uventet feil ved henting av embeddings: {e}"
+            if st:
+                st.error(msg)
+            raise RuntimeError(msg)
+
         for item in r.data:
             v = np.asarray(item.embedding, dtype="float32")
             v = v / (np.linalg.norm(v) + 1e-12)
             vecs.append(v)
+
     if not vecs:
-        # tomt korpus → default dimensjon 1536
         return np.zeros((0, 1536), dtype="float32")
+
     return np.vstack(vecs)
 
 
