@@ -1,73 +1,63 @@
-Sponsor av Asker Tennis
-Vil du bli sponsor for Asker Tennis?
-Ønsker du eller din bedrift å være synlig på Asker Tennisklubb? 
-Banesponsor/hovedsponsor:
-Selskapet kan være sponsor for hele banen. Med dette mener vi at navnet på selskapet vil stå på selve banen under banebooking. Eks: "Meny,
-Bane 1". Så hver gang en kunde booker en bane vil de bli mint på selskapet. I tillegg får selskapet 2 plakater på innebanen de er sponsor for. Hvis du
-er sponsor for en utebane får du et stort vindseil på gjerdet på banen og selvfølgelig at banen heter det selskapet heter.
-Pris innebane: 50 000 kr i året. 
-Pris utebane: 30 000 kr i året. 
-Storplakatsponsor innebane:
-Selskapet kan sette opp en stor plakat på bane 4-veggen. Dette er den største plakaten vi tilbyr. 
-Pris: 30 000 kr i året. 
-Vanligplakatsponsor innebane: 
-VELKOMMEN TIL VÅR NYE NETTSIDE!
-11.08.2025, 19:49
-Sponsor av Asker Tennis
-https://askertennis.no/pages/stott-klubben
-1/4
-En plakat på siden av banen. 
-Pris: 12 500 kr i året. 
-Vindseilsponsor (12x2 meter) utebane:
-Et vindseil langs utebanen. 
-Pris: 15 000 kr i året. 
-Andre sponsoravtaler:
-Selskapets ansatte kan ha rabaterte/gratis priser på tennisspill. Dette kan diskuteres med selskapet og settes etter selskapets ønsker. 
-Pris: Vanlig pris er 2300 kr pr medlemskap, men ved mange ansatte kan det koste 40 000 får 20 medlemskap som gir 300 kr i rabatt på hvert
-medlemskap. Dette er bare et eksempel og det kan diskuteres etter ønsker. 
-Dersom din virksomhet eller bedrift er interessert i et samarbeid, ta gjerne kontakt med: info@askertennis.no
-Informasjon
-Om Asker Tennisklubb
-Parkering Asker Tennis
-Kontakt oss
-Automatiske Betalinger
-Angrerett
-Åpningstider
-Baneleie:
-Man-Søn: 06.00-24.00
-Butikk/café:
-Man-Fre: 09.00-17.00
-Lørdag-Søndag: Stengt
-11.08.2025, 19:49
-Sponsor av Asker Tennis
-https://askertennis.no/pages/stott-klubben
-2/4
-Frakt & Henting
-Kjøpsvilkår
-Personvernerklæring
-Kundeservice og Adresser
-E-post: info@askertennis.no
-Telefon: 902 67 989
-Vipps: 903600
-Org nr: 971 262 567
-Juridisk navn: Asker Tennisklubb
-Adresse 1: Brages vei 4, 1387 Asker
-Adresse 2: Bleikerveien 64, 1387 Asker
-Asker Tennis utvikler seg!
-Asker Tennis er i en utviklings- og renovasjonsfase! Vi utvikler nå egne
-løsninger på vår nye nettside. Her kan du finne alt du trenger for å spille
-tennis. Vi holder også på med oppussing av alle våre lokaler. Vi gjør alt
-dette for at du som medlem og kunde skal få en bedre opplevelse av
-klubben! Ønsker du å bli medlem i en av Norges største tennisklubber som
-både fokuserer på gode tilbud og god kunderservice?
-11.08.2025, 19:49
-Sponsor av Asker Tennis
-https://askertennis.no/pages/stott-klubben
-3/4
-Meld deg på vårt nyhetsbrev!
-© 2025, Asker Tennis
-E-post
-11.08.2025, 19:49
-Sponsor av Asker Tennis
-https://askertennis.no/pages/stott-klubben
-4/4
+# Sponsor – Asker Tennis
+
+## Oversikt
+
+* Bli sponsor og få synlighet i anlegget og ved banebooking. Tilbud for inne- og utebaner.&#x20;
+
+## Sponsorpakker og priser (per år)
+
+* **Banesponsor / hovedsponsor**
+
+  * Banen får selskapets navn i **banebooking** (eks.: «Meny, Bane 1»).
+  * **Innebane:** 2 plakater på banen. **Pris: 50 000 kr/år**.
+  * **Utebane:** stort **vindseil** på gjerdet. **Pris: 30 000 kr/år**.&#x20;
+* **Storplakat – innebane**
+
+  * Stor plakat på **bane 4-veggen** (største plakatløsning).
+  * **Pris: 30 000 kr/år**.&#x20;
+* **Vanlig plakat – innebane**
+
+  * Én plakat på siden av banen.
+  * **Pris: 12 500 kr/år**.&#x20;
+* **Vindseil – utebane**
+
+  * Vindseil **12×2 meter** langs utebanen.
+  * **Pris: 15 000 kr/år**.&#x20;
+* **Andre sponsoravtaler (tilpasses)**
+
+  * Mulighet for rabatterte/gratis priser på tennisspill for ansatte.
+  * Eksempel: **20 medlemskap** for **40 000 kr** (300 kr rabatt pr. medlemskap). Ordinær pris **2 300 kr** pr. medlemskap. **\[Eksempel – kan tilpasses]**.&#x20;
+
+## Eksponering og fordeler
+
+* Navn vises ved hver **banebooking** for banesponsor.
+* **Skilt/plakater** inne og **vindseil** ute gir profilering i anlegget.&#x20;
+
+## Kontakt
+
+* Interessert i samarbeid? **[info@askertennis.no](mailto:info@askertennis.no)**.&#x20;
+
+## Åpningstider (anlegget)
+
+* **Baneleie:** Man–Søn **06:00–24:00**.
+* **Butikk/café:** Man–Fre **09:00–17:00**, Lør–Søn **stengt**.&#x20;
+
+## Kundeservice og adresser
+
+* **E-post:** [info@askertennis.no](mailto:info@askertennis.no) · **Telefon:** 902 67 989 · **Vipps:** 903600.
+* **Org.nr.:** 971 262 567 · **Juridisk navn:** Asker Tennisklubb.
+* **Adresse 1:** Brages vei 4, 1387 Asker · **Adresse 2:** Bleikerveien 64, 1387 Asker.&#x20;
+
+## Status
+
+* Klubben er i **utviklings- og renovasjonsfase**. Nye løsninger bygges på nettsiden.&#x20;
+
+## Uavklart / trenger supplering
+
+* **Inkluderer prisene mva.?**
+* **Produksjon/montering** og **vedlikehold** av plakater/vindseil – inkludert eller faktureres separat?
+* **Bindingstid**/oppsigelse, tilgjengelige baner og **designgodkjenning**.&#x20;
+
+## Sist vist
+
+* Denne siden ble vist **11.08.2025 kl. 19:49**.&#x20;
