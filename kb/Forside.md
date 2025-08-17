@@ -1,129 +1,68 @@
-Velkommen til Asker Tennis
-Ny nettside – Alt samlet på ett sted: medlemskap, trening, booking, nettbutikk og informasjon.
+# Asker Tennis – nøkkelinformasjon
 
-Gavekort – Kjøp et gavekort som presang.
+## Tilbud
 
-Klubben
-Navn: Asker Tennisklubb
+* **Sommerleir** i uke 26, 27, 32 og 33. Pris: **2.800 kr**.&#x20;
+* **Gruppetrening** – faste timer med trener. **\[KAN TRENGE SUPPLERING: priser/nivå/varighet]**.&#x20;
+* **Tennis DROP-IN** for voksne. For alle nivåer. Fin måte å lære, få tips og finne partnere.&#x20;
+* **Privattimer** (fra-priser):
 
-Lokasjoner:
+  * Mikael Andreas Almås Joakim – fra **799 kr**
+  * Erik Rochette – fra **1.199 kr**
+  * Kjell Henry Hustad – fra **999 kr**
+  * Theo Rochette – fra **649 kr**
+  * Michaela J. Ekblom – fra **449 kr**
+  * Kai Solberg – fra **999 kr**.&#x20;
+* **Tennis BARN SFO** – for barn i **1.–4. klasse**.&#x20;
+* **Klubbstigen** – app som setter opp kamper etter nivå og rangerer spillere. Åpen for alle nivåer.&#x20;
+* **Banebooking** – «Book en bane». **\[KAN TRENGE SUPPLERING: bookingregler/avbestilling/priser]**.&#x20;
 
-Brages vei 4, 1387 Asker
+## Priser og kampanjer
 
-Bleikerveien 64, 1387 Asker
+* Sommerleir: **2.800 kr**.&#x20;
+* Privattimer: se fra-priser under «Privattimer».&#x20;
+* **Sommersalg sko**: 50 % rabatt (eksempler):
 
-Fokus: Medlemskap, treningstilbud, booking, nettbutikk, strengeservice, gavekort.
+  * Wilson Rush Pro 4.0: **1.499 → 749 kr**
+  * Wilson Kaos Swift 1.5 Clay: **1.349 → 675 kr**
+  * Wilson Rush Pro JR L: **949 → 475 kr**.&#x20;
 
-Sommerleir
-Uker: 26, 27, 32, 33
+## Åpningstider
 
-Pris: 2 800 kr
+* **Baneleie**: Man–Søn **06:00–24:00**.
+* **Butikk/café**: Man–Fre **09:00–17:00**, Lør–Søn **stengt**.&#x20;
 
-Målgruppe: Barn og ungdom
+## Kontakt og betaling
 
-Treningstilbud
-Tennis UNG
-Målgruppe: 9–19 år
+* **E-post**: [info@askertennis.no](mailto:info@askertennis.no)
+* **Telefon**: 902 67 989
+* **Vipps**: 903600
+* **Org.nr.**: 971 262 567
+* **Juridisk navn**: Asker Tennisklubb
+* **Adresse 1**: Brages vei 4, 1387 Asker
+* **Adresse 2**: Bleikerveien 64, 1387 Asker.&#x20;
 
-Påmelding åpen
+## Støtt klubben
 
-Gruppetrening
-Fast time med trener
+* **Grasrotandelen**: send SMS «Grasrotandelen **971262567**» til **60000**.&#x20;
+* **Sponsing**: Klubben søker sponsorer/partnere. Ta kontakt ved interesse. **\[KAN TRENGE SUPPLERING: pakker/priser]**.&#x20;
 
-Forbedre ferdigheter
+## Parkering
 
-Bestill nå
+* **Ny parkering** ved utebanene. Løsningen **administreres av P-Norge** (på Risenga-området for Asker kommune).
+* **\[KAN TRENGE SUPPLERING: satser, betaling, håndheving, HC-plasser]**.&#x20;
 
-Tennis BARN SFO
-Alder: 5–9 år
+## Lokasjoner
 
-Tid: 14.00–16.00
+* Klubben holder til ved **Brages vei 4** og **Bleikerveien 64** i Asker.&#x20;
 
-Påmelding åpen
+## Annet
 
-Tennis DROP-IN
-Betal per gang
+* Klubben og nettsiden er i en **utviklings- og renovasjonsfase** for bedre medlem- og kundeopplevelse. **\[KAN TRENGE SUPPLERING: tidsplan/berørte tilbud]**.&#x20;
 
-For nybegynnere og erfarne
+## Viktig å avklare videre
 
-Påmelding åpen
-
-Tennis BARN
-Alder: 5–9 år
-
-Introduksjon til tennis
-
-Påmelding åpen
-
-Tilbud
-Sommersalg: 50% på sko
-
-Merkevarer: Wilson Rush Pro, Wilson Kaos Swift, Wilson Rush Pro JR
-
-Klubbstigen
-App for rangering av spillere etter nivå og kampresultater
-
-Åpen for alle nivåer
-
-Påmelding åpen
-
-Voksenkurs og Drop-in
-Voksenkurs for nybegynnere og erfarne
-
-Mulighet for å finne nye partnere
-
-Drop-in for fleksibel spill
-
-Privattimer
-Mikael Andreas Almås Joakim – Fra 799 kr
-
-Erik Rochette – Fra 1 199 kr
-
-Kjell Henry Hustad – Fra 999 kr
-
-Siri E Weiergang – Fra 649 kr
-
-Theo Rochette – Fra 649 kr
-
-Kai Solberg – Fra 999 kr
-
-Sponsor og støtte
-Bli sponsor – eksponering på klubbens plattformer
-
-Grasrotandelen – SMS "Grasrotandelen 971262567" til 60000
-
-Parkering
-Ny avtale med P-Norge ved utebanene
-
-Administreres sammen med Risenga parkering
-
-Booking
-Baneleie: Man–Søn 06.00–24.00
-
-Book online
-
-Butikk / Café
-Man–Fre: 09.00–17.00
-
-Lør–Søn: Stengt
-
-Kontakt
-E-post: info@askertennis.no
-
-Telefon: 902 67 989
-
-Vipps: 903600
-
-Org.nr: 971 262 567
-
-Utvikling
-Oppussing av lokaler
-
-Nye nettsideløsninger
-
-Fokus på bedre medlem- og kundeopplevelse
-
-Sosiale medier
-Facebook
-
-Instagram
+* **Priser** for gruppetrening, baneleie og drop-in.
+* **Regler** for booking/avbestilling.
+* **Detaljer** for parkering (satser/perioder).
+* **Sponsorpakker** og fordeler. **\[KAN TRENGE SUPPLERING]**.&#x20;
