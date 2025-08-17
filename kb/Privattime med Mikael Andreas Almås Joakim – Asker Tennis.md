@@ -1,95 +1,48 @@
-Privattime med Mikael Andreas Almås Joakim
-799,00 kr
-Inkludert avgifter.
-1/1
-VELKOMMEN TIL VÅR NYE NETTSIDE!
-11.08.2025, 19:49
-Privattime med Mikael Andreas Almås Joakim – Asker Tennis
-https://askertennis.no/products/privattime-med-mikael-andreas-almas-joakim
-1/5
-Mikael har 15 års trenererfaring. 
-Han har Norges Tennisforbunds trener 3 utdannelse. 
-Han har jobbet i Asker Tennisklubb som konkurransetrener, sportslig leder og i dag Daglig Leder. 
-Han har trent alle aldre og nivåer fra 2 år til 95 år. 
-Han har trent Norges kvinnelandslag i tennis.
-Kontakt han på SMS etter at du har bestilt time og send skjermbilde av e-post bekreftelsen, så finner dere en tid som passer for dere begge. - 468 34
-990
-MERK: Hvis vedkommende ikke kan en spesiell dato må dette informeres om til trener senest 24 timer før timen starter. Hvis ikke man gjør dette mister
-man timen sin. Treneren har og rett på å dra fra timen hvis ikke spilleren møter opp innen 30 minutter fra timen har startet. Eks: Timen starter 14.00 og
-spilleren møter opp 14.35, kan det være at treneren har dratt. 
-Send SMS til treneren for å planlegge tidspunkt. Nummeret står nederst på siden. Les hele teksten under.
-BANELEIE INKLUDERT.
-Type time
- 
- 
- 
-Antall ganger (ukentlig)
- 
- 
-Spiller 1 for- og etternavn:
-Spiller 2 for- og etternavn:
-Privattime (1 person)
-Gruppetime (2 personer)
-Gruppetime (3 personer)
-Gruppetime (4 personer)
-1 gang
-5 ganger (5% rabatt)
-10 ganger (10% rabatt)
-11.08.2025, 19:49
-Privattime med Mikael Andreas Almås Joakim – Asker Tennis
-https://askertennis.no/products/privattime-med-mikael-andreas-almas-joakim
-2/5
-Spiller 3 for- og etternavn:
-Spiller 4 for- og etternavn:
-Noe vi burde vite?
-Godtar du at vi kan ta bilder til kommersielt bruk (reklame og
-nettside)? *
-Godta
-Avis
-Legg i handlekurv
-Del
-11.08.2025, 19:49
-Privattime med Mikael Andreas Almås Joakim – Asker Tennis
-https://askertennis.no/products/privattime-med-mikael-andreas-almas-joakim
-3/5
-Informasjon
-Om Asker Tennisklubb
-Parkering Asker Tennis
-Kontakt oss
-Automatiske Betalinger
-Angrerett
-Frakt & Henting
-Kjøpsvilkår
-Personvernerklæring
-Åpningstider
-Baneleie:
-Man-Søn: 06.00-24.00
-Butikk/café:
-Man-Fre: 09.00-17.00
-Lørdag-Søndag: Stengt
-Kundeservice og Adresser
-E-post: info@askertennis.no
-Telefon: 902 67 989
-Vipps: 903600
-Org nr: 971 262 567
-Juridisk navn: Asker Tennisklubb
-Asker Tennis utvikler seg!
-Asker Tennis er i en utviklings- og renovasjonsfase! Vi utvikler nå egne
-løsninger på vår nye nettside. Her kan du finne alt du trenger for å spille
-tennis. Vi holder også på med oppussing av alle våre lokaler. Vi gjør alt
-dette for at du som medlem og kunde skal få en bedre opplevelse av
-klubben! Ønsker du å bli medlem i en av Norges største tennisklubber som
-både fokuserer på gode tilbud og god kunderservice?
-11.08.2025, 19:49
-Privattime med Mikael Andreas Almås Joakim – Asker Tennis
-https://askertennis.no/products/privattime-med-mikael-andreas-almas-joakim
-4/5
-Adresse 1: Brages vei 4, 1387 Asker
-Adresse 2: Bleikerveien 64, 1387 Asker
-Meld deg på vårt nyhetsbrev!
-© 2025, Asker Tennis
-E-post
-11.08.2025, 19:49
-Privattime med Mikael Andreas Almås Joakim – Asker Tennis
-https://askertennis.no/products/privattime-med-mikael-andreas-almas-joakim
-5/5
+# Privattime – Mikael Andreas Almås Joakim
+
+## Pris og innhold
+
+* **Pris:** **799 kr**, inkludert avgifter.&#x20;
+* **Baneleie inkludert** i prisen.&#x20;
+
+## Bestilling og kontakt
+
+* Bestill time i nettbutikken. **Send SMS** til trener etter bestilling med skjermbilde av e-postbekreftelsen for å avtale tidspunkt. **Tlf.: 468 34 990**.&#x20;
+
+## Typer timer og pakker
+
+* **Typer:** Privattime (1 person) · Gruppetime (2–4 personer).&#x20;
+* **Pakker:** 1 gang · 5 ganger (**5 % rabatt**) · 10 ganger (**10 % rabatt**).&#x20;
+
+## Avbestilling og oppmøte
+
+* **Avbestilling:** Gi beskjed **senest 24 timer** før start hvis tidspunkt ikke passer. Ellers **mister du timen**.&#x20;
+* **Forsinkelse:** Trener kan forlate timen hvis spiller ikke møter innen **30 minutter** etter start (eksempel: start 14:00 → oppmøte 14:35 kan være for sent).&#x20;
+
+## Trener – kompetanse
+
+* **Mikael** har **15 års** trenererfaring. **NTF Trener 3**. Har vært konkurransetrener, sportslig leder og er i dag **daglig leder** i ATK. Har trent alle aldre **2–95 år** og **Norges kvinnelandslag**.&#x20;
+
+## Skjema ved bestilling
+
+* Felt: **Spiller 1–4 navn** og «**Noe vi burde vite?**». &#x20;
+* **Samtykke til foto** for kommersielt bruk (reklame/nettside).&#x20;
+
+## Åpningstider (anlegget)
+
+* **Baneleie:** Man–Søn **06:00–24:00**. **Butikk/café:** Man–Fre **09:00–17:00**, Lør–Søn **stengt**.&#x20;
+
+## Kundeservice og adresser
+
+* **E-post:** [info@askertennis.no](mailto:info@askertennis.no) · **Telefon:** 902 67 989 · **Vipps:** 903600 · **Org.nr.:** 971 262 567 · **Juridisk navn:** Asker Tennisklubb.&#x20;
+* **Adresse 1:** Brages vei 4, 1387 Asker · **Adresse 2:** Bleikerveien 64, 1387 Asker.&#x20;
+
+## \[KAN TRENGE SUPPLERING]
+
+* **Varighet per time**, og om **gruppetimer** har egne priser per person.
+* **Alderskrav**, betalings- og **refusjonsvilkår** utover det som står på policy-sidene.
+* Presisering rundt **foto-samtykke** (om det er obligatorisk). &#x20;
+
+## Sist vist
+
+* Siden ble vist **11.08.2025 kl. 19:49**.&#x20;
