@@ -26,11 +26,12 @@ SYN = {
     "booking": ["booking", "booke", "banebooking", "banereservasjon", "reserver", "bane", "matchi"],
     "pris": ["pris", "avgift", "timepris", "kostnad", "medlemspris", "drop-in", "billig", "rimelig", "rabatt", "off-peak", "lavsesong"],
     "tid": ["tid", "tidspunkt", "hverdag", "helg", "dagtid", "kveld", "sesong", "utesesong"],
-    "kontakt": ["kontakt", "telefon", "tlf", "mail", "e-post", "e-post", "email", "adresse"],
+    "kontakt": ["kontakt", "telefon", "tlf", "mail", "e-post", "email", "adresse"],
     "medlemskap": ["medlemskap", "medlem", "innmelding", "bli medlem", "junior", "barn", "voksen", "familie"],
     "parkering": ["parkering", "p-norge", "parkere", "bil", "easypark", "takstgruppe"],
-    "utstyr": ["utstyr", "racket", "rackets", "leie", "utleie", "strengeservice"],
+    "utstyr": ["utstyr", "racket", "rackets", "leie", "låne", "låner", "utleie", "strengeservice"],
     "klubbstigen": ["klubbstigen", "stige", "rankingsystem", "app"],
+    "leir": ["leir", "sommerleir", "høstferieleir", "ferieleir", "vinterleir", "camp"]
 }
 
 DOC_HINTS = {
@@ -41,6 +42,7 @@ DOC_HINTS = {
     "parkering": SYN["parkering"],
     "utstyr": SYN["utstyr"],
     "klubbstigen": SYN["klubbstigen"],
+    "leir": SYN["leir"],
 }
 
 def _expand_query(q: str) -> Tuple[str, Set[str], List[str]]:
