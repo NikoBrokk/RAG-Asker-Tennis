@@ -1,92 +1,66 @@
-Årshjul og kalender
-2025
-Januar
-Uke 1: Juleferie
-Uke 2: Treningene starter
-Februar
-Uke 8: Vinterferie, ikke vanlige treninger.
-Vinterferie Camp. 
-Mars
-April
-VELKOMMEN TIL VÅR NYE NETTSIDE!
-11.08.2025, 19:47
-Årshjul og kalender – Asker Tennis
-https://askertennis.no/pages/asker-tennis-kalender
-1/5
-13. april: Helligdag, ikke vanlige treninger
-Uke 16: Påskeferie, Ikke vanlige treninger
-21. april: Helligdag, ikke vanlige treninger
-Mai
-1. mai: Helligdag, ikke vanlige treninger
-17. mai: Helligdag, ikke vanlige treninger
-29. mai: Helligdag, ikke vanlige treninger
-Juni
-9. juni: Helligdag, ikke vanlige treninger
-Uke 25: Treningene slutter
-Uke 26: Sommerleir
-Uke 27: Sommerleir
-Juli
- 
-August
-7. - 12. august: NM Veteran
-Uke 32: Sommerleir
-Uke 33: Sommerleir
-Uke 34: Treningene starter
-September
-11.08.2025, 19:47
-Årshjul og kalender – Asker Tennis
-https://askertennis.no/pages/asker-tennis-kalender
-2/5
- 
-Oktober
-Uke 40: Høstferie, ikke vanlige treninger
-November
- 
-Desember
-Uke 51: Treningene slutter
-Uke 52: Juleferie
-Informasjon
-Om Asker Tennisklubb
-Parkering Asker Tennis
-Kontakt oss
-Automatiske Betalinger
-Angrerett
-Frakt & Henting
-Åpningstider
-Baneleie:
-Man-Søn: 06.00-24.00
-Butikk/café:
-Man-Fre: 09.00-17.00
-Lørdag-Søndag: Stengt
-11.08.2025, 19:47
-Årshjul og kalender – Asker Tennis
-https://askertennis.no/pages/asker-tennis-kalender
-3/5
-Kjøpsvilkår
-Personvernerklæring
-Kundeservice og Adresser
-E-post: info@askertennis.no
-Telefon: 902 67 989
-Vipps: 903600
-Org nr: 971 262 567
-Juridisk navn: Asker Tennisklubb
-Adresse 1: Brages vei 4, 1387 Asker
-Adresse 2: Bleikerveien 64, 1387 Asker
-Asker Tennis utvikler seg!
-Asker Tennis er i en utviklings- og renovasjonsfase! Vi utvikler nå egne
-løsninger på vår nye nettside. Her kan du finne alt du trenger for å spille
-tennis. Vi holder også på med oppussing av alle våre lokaler. Vi gjør alt
-dette for at du som medlem og kunde skal få en bedre opplevelse av
-klubben! Ønsker du å bli medlem i en av Norges største tennisklubber som
-både fokuserer på gode tilbud og god kunderservice?
-11.08.2025, 19:47
-Årshjul og kalender – Asker Tennis
-https://askertennis.no/pages/asker-tennis-kalender
-4/5
-Meld deg på vårt nyhetsbrev!
-© 2025, Asker Tennis
-E-post
-11.08.2025, 19:47
-Årshjul og kalender – Asker Tennis
-https://askertennis.no/pages/asker-tennis-kalender
-5/5
+# Årshjul og kalender – Asker Tennis
+
+## 2025 – nøkkeldatoer
+
+* **Januar**
+
+  * Uke 1: **Juleferie**.
+  * Uke 2: **Treningene starter**.&#x20;
+* **Februar**
+
+  * Uke 8: **Vinterferie**, ikke vanlige treninger.
+  * **Vinterferie Camp**.&#x20;
+* **April**
+
+  * 13\. apr: **Helligdag**, ikke vanlige treninger.
+  * Uke 16: **Påskeferie**, ikke vanlige treninger.
+  * 21. apr: **Helligdag**, ikke vanlige treninger.&#x20;
+* **Mai**
+
+  * 1. mai, 17. mai, 29. mai: **Helligdag**, ikke vanlige treninger.&#x20;
+* **Juni**
+
+  * 9\. jun: **Helligdag**, ikke vanlige treninger.
+  * Uke 25: **Treningene slutter**.
+  * Uke 26–27: **Sommerleir**.&#x20;
+* **August**
+
+  * **7.–12. aug: NM Veteran**.
+  * Uke 32–33: **Sommerleir**.
+  * Uke 34: **Treningene starter**.&#x20;
+* **Oktober**
+
+  * Uke 40: **Høstferie**, ikke vanlige treninger.&#x20;
+* **Desember**
+
+  * Uke 51: **Treningene slutter**.
+  * Uke 52: **Juleferie**.&#x20;
+
+## Åpningstider
+
+* **Baneleie:** Man–Søn **06:00–24:00**.
+* **Butikk/café:** Man–Fre **09:00–17:00**, Lør–Søn **stengt**.&#x20;
+
+## Kundeservice og adresser
+
+* **E-post:** [info@askertennis.no](mailto:info@askertennis.no) · **Telefon:** 902 67 989 · **Vipps:** 903600.&#x20;
+* **Org.nr.:** 971 262 567 · **Juridisk navn:** Asker Tennisklubb.&#x20;
+* **Adresse 1:** Brages vei 4, 1387 Asker.&#x20;
+* **Adresse 2:** Bleikerveien 64, 1387 Asker.&#x20;
+
+## Status
+
+* Klubben er i **utviklings- og renovasjonsfase**. Egne løsninger bygges på ny nettside.&#x20;
+
+## Nyhetsbrev og sosiale medier
+
+* **Meld deg på nyhetsbrevet.**&#x20;
+* **Facebook** og **Instagram** er tilgjengelig.&#x20;
+
+## Mangler/uklart i dokumentet
+
+* **Mars**, **Juli**, **September**, **November** – ingen oppføringer listet. **\[KAN TRENGE SUPPLERING]**.   &#x20;
+
+## Sist vist
+
+* Denne siden ble vist **11.08.2025 kl. 19:47**.&#x20;
