@@ -25,20 +25,39 @@ SYSTEM_PROMPT = (
 SYN = {
     "booking": ["booking", "booke", "banebooking", "banereservasjon", "reserver", "bane", "matchi"],
     "pris": ["pris", "avgift", "timepris", "kostnad", "medlemspris", "drop-in", "billig", "rimelig", "rabatt", "off-peak", "lavsesong"],
-    "tid": ["tid", "tidspunkt", "hverdag", "helg", "dagtid", "kveld"],
+    "tid": ["tid", "tidspunkt", "hverdag", "helg", "dagtid", "kveld", "sesong", "utesesong"],
+    "kontakt": ["kontakt", "telefon", "tlf", "mail", "e-post", "e-post", "email", "adresse"],
+    "medlemskap": ["medlemskap", "medlem", "innmelding", "bli medlem", "junior", "barn", "voksen", "familie"],
+    "parkering": ["parkering", "p-norge", "parkere", "bil", "easypark", "takstgruppe"],
+    "utstyr": ["utstyr", "racket", "rackets", "leie", "utleie", "strengeservice"],
+    "klubbstigen": ["klubbstigen", "stige", "rankingsystem", "app"],
 }
-DOC_HINTS = {"booking": SYN["booking"], "pris": SYN["pris"]}
+
+DOC_HINTS = {
+    "booking": SYN["booking"],
+    "pris": SYN["pris"],
+    "kontakt": SYN["kontakt"],
+    "medlemskap": SYN["medlemskap"],
+    "parkering": SYN["parkering"],
+    "utstyr": SYN["utstyr"],
+    "klubbstigen": SYN["klubbstigen"],
+}
 
 def _expand_query(q: str) -> Tuple[str, Set[str], List[str]]:
     ql = q.lower()
     extra: List[str] = []
     preferred: Set[str] = set()
+
+    # legg til doc hints (hvilken type dokument som skal foretrekkes)
     for dt, triggers in DOC_HINTS.items():
         if any(t in ql for t in triggers):
             preferred.add(dt)
-    for key in ("booking", "pris", "tid"):
-        if any(t in ql for t in SYN[key]):
-            extra += SYN[key]
+
+    # legg til query expansions (ekstra søkeord)
+    for key, words in SYN.items():
+        if any(t in ql for t in words):
+            extra += words
+
     expanded = q if not extra else q + " " + " ".join(sorted(set(extra)))
     return expanded, preferred, sorted(set(extra))
 
