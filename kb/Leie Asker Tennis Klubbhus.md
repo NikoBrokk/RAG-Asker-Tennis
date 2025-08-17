@@ -1,49 +1,46 @@
-Leie Asker Tennis Klubbhus
-Vi leier ut klubbhuset vårt til alle voksne over 25 år. Primært kan det leies for alle arrangementer utenom fester. 
-Pris, dato, tidspunkt og mer info ta kontakt med mikael@askertennis.no. 
-Informasjon
-Om Asker Tennisklubb
-Parkering Asker Tennis
-Kontakt oss
-Automatiske Betalinger
-Angrerett
-Åpningstider
-Baneleie:
-Man-Søn: 06.00-24.00
-Butikk/café:
-Man-Fre: 09.00-17.00
-Lørdag-Søndag: Stengt
-VELKOMMEN TIL VÅR NYE NETTSIDE!
-11.08.2025, 19:49
-Leie Asker Tennis Klubbhus
-https://askertennis.no/pages/leie-asker-tennis-klubbhus
-1/3
-Frakt & Henting
-Kjøpsvilkår
-Personvernerklæring
-Kundeservice og Adresser
-E-post: info@askertennis.no
-Telefon: 902 67 989
-Vipps: 903600
-Org nr: 971 262 567
-Juridisk navn: Asker Tennisklubb
-Adresse 1: Brages vei 4, 1387 Asker
-Adresse 2: Bleikerveien 64, 1387 Asker
-Asker Tennis utvikler seg!
-Asker Tennis er i en utviklings- og renovasjonsfase! Vi utvikler nå egne
-løsninger på vår nye nettside. Her kan du finne alt du trenger for å spille
-tennis. Vi holder også på med oppussing av alle våre lokaler. Vi gjør alt
-dette for at du som medlem og kunde skal få en bedre opplevelse av
-klubben! Ønsker du å bli medlem i en av Norges største tennisklubber som
-både fokuserer på gode tilbud og god kunderservice?
-11.08.2025, 19:49
-Leie Asker Tennis Klubbhus
-https://askertennis.no/pages/leie-asker-tennis-klubbhus
-2/3
-Meld deg på vårt nyhetsbrev!
-© 2025, Asker Tennis
-E-post
-11.08.2025, 19:49
-Leie Asker Tennis Klubbhus
-https://askertennis.no/pages/leie-asker-tennis-klubbhus
-3/3
+# Leie Asker Tennis Klubbhus
+
+## Hvem kan leie
+
+* Utleie til voksne **over 25 år**.&#x20;
+
+## Bruk
+
+* Leies primært til **arrangementer utenom fester**.&#x20;
+
+## Pris og booking
+
+* For **pris, dato og tidspunkt**, ta kontakt: **[mikael@askertennis.no](mailto:mikael@askertennis.no)**.&#x20;
+
+## Åpningstider (anlegget)
+
+* **Baneleie:** Man–Søn **06:00–24:00**.
+* **Butikk/café:** Man–Fre **09:00–17:00**, Lør–Søn **stengt**.&#x20;
+
+## Kundeservice og adresser
+
+* **E-post:** [info@askertennis.no](mailto:info@askertennis.no) · **Telefon:** 902 67 989 · **Vipps:** 903600.&#x20;
+* **Org.nr.:** 971 262 567 · **Juridisk navn:** Asker Tennisklubb.&#x20;
+* **Adresse 1:** Brages vei 4, **1387 Asker**.
+* **Adresse 2:** Bleikerveien 64, **1387 Asker**.&#x20;
+
+## Status
+
+* Klubben er i **utviklings- og renovasjonsfase**. Egne løsninger bygges på ny nettside.&#x20;
+
+## Relaterte sider
+
+* **Om Asker Tennisklubb** · **Parkering** · **Kundeservice** · **Policy-sider** (Angrerett, Frakt & Henting, Kjøpsvilkår, Personvern, Automatiske betalinger).&#x20;
+
+## \[KAN TRENGE SUPPLERING]
+
+* **Pris** og eventuelle **depositum**.
+* **Kapasitet**, bord/stoler, kjøkken, teknisk utstyr.
+* **Regler:** alkohol, vakthold, ro/ordensregler, alder for arrangør og deltakere.
+* **Rydding/vask**, opp- og nedrigg, erstatningsansvar.
+* **Avbestilling** og betalingsvilkår.
+* **Tilgjengelighet/HC**, **parkering**, kollektivtilbud.&#x20;
+
+## Sist vist
+
+* Siden ble vist **11.08.2025 kl. 19:49**.&#x20;
