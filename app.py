@@ -44,7 +44,7 @@ mode_label = "**OpenAI**" if USE_OPENAI else "**TF-IDF**"
 st.caption(f"Status: indeks `ok` • Modus: {mode_label} (modell: {CHAT_MODEL})")
 
 q = st.text_input("Skriv spørsmålet ditt:", placeholder="F.eks. Hva koster det å leie bane?")
-k = 3
+k = 6
 
 if st.button("Svar") and q.strip():
     with st.spinner("Henter…"):
