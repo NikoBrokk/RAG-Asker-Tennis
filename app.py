@@ -36,15 +36,15 @@ def ensure_index():
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         build_index(KB_DIR)
 
-st.set_page_config(page_title="RAG Demo – Asker Tennis", page_icon="🔎", layout="centered")
+st.set_page_config(page_title="Chatbot Asker Tennis", page_icon="🎾", layout="centered")
 ensure_index()
 
-st.title("🔎 RAG Demo (GitHub)")
+st.title("🎾 Chatbot Asker Tennis")
 mode_label = "**OpenAI**" if USE_OPENAI else "**TF-IDF**"
 st.caption(f"Status: indeks `ok` • Modus: {mode_label} (modell: {CHAT_MODEL})")
 
-q = st.text_input("Skriv spørsmålet ditt:", placeholder="F.eks. Hvordan resetter jeg passordet?")
-k = st.slider("Antall kilder", 2, 12, 6)
+q = st.text_input("Skriv spørsmålet ditt:", placeholder="F.eks. Hva koster det å leie bane?")
+k = 3
 
 if st.button("Svar") and q.strip():
     with st.spinner("Henter…"):
