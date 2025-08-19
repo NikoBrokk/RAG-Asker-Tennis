@@ -64,12 +64,22 @@ def _title_from_markdown(txt: str, fallback: str) -> str:
 
 def _infer_doc_type(name: str, text: str) -> str:
     low = (name + " " + text[:400]).lower()
+    # Regler, vilkår
     if any(w in low for w in ["vilkår", "terms", "betingelser", "angrerett", "personvern", "gdpr", "privacy"]):
         return "regel"
-    if any(w in low for w in ["pris", "timepris", "avgift", "kontingent", "kostnad", "rabatt"]):
+    # Medlemskap og klubbinfo
+    if any(w in low for w in ["innmelding", "medlemsfordel", "kontingent", "medlemskontingent"]):
+        return "medlemskap"
+    if any(w in low for w in ["stiftet", "medlemmer", "har rundt", "medlemstall",
+                              "grusbaner", "innendørsbaner", "daglig leder", "sportslig leder", "hovedtrener"]):
+        return "info"
+    # Priser
+    if any(w in low for w in ["pris", "timepris", "avgift", "kostnad", "rabatt"]):
         return "pris"
-    if any(w in low for w in ["booking", "banebooking", "reserver", "matchi", "baneregler"]):
+    # Booking, baner
+    if any(w in low for w in ["booking", "banebooking", "reserver", "matchi", "baneregler", "bane ", "baner"]):
         return "booking"
+    # Håndbok
     if any(w in low for w in ["håndbok"]):
         return "håndbok"
     return "annet"
