@@ -1,57 +1,37 @@
-# Priser ved banebooking – Asker Tennis
+# Priser ved banebooking
 
-## Tennishallen (Brages vei 4, Asker)
+*(Gjeldende priser for leie av tennisbane, sist oppdatert 2025.)*
 
-Åpent hele året. Prisene gjelder pr. 60 minutter.
+## Innendørshall – timepris
+**Ikke-medlem:**
+- **Hverdager før kl 16:00** – 260 kr
+- **Hverdager 16:00–22:00** – 400 kr
+- **Hverdager 22:00–24:00** – 200 kr
+- **Helg før kl 09:00** – 200 kr
+- **Helg 09:00–16:00** – 400 kr
+- **Helg 16:00–21:00** – 260 kr
+- **Helg 21:00–24:00** – 200 kr
 
-### Hverdager
+**Medlem:**
+- **Hverdager før kl 16:00** – 180 kr
+- **Hverdager 16:00–22:00** – 280 kr
+- **Hverdager 22:00–24:00** – 100 kr
+- **Helg før kl 09:00** – 100 kr
+- **Helg 09:00–16:00** – 280 kr
+- **Helg 16:00–21:00** – 180 kr
+- **Helg 21:00–24:00** – 100 kr
 
-* 06:00–08:00: Medlem 100 kr / Ikke-medlem 300 kr
-* 08:00–15:00: Medlem 200 kr / Ikke-medlem 400 kr
-* 15:00–21:00: Medlem 300 kr / Ikke-medlem 500 kr
-* 21:00–22:00: Medlem 200 kr / Ikke-medlem 400 kr
-* 22:00–24:00: Medlem 100 kr / Ikke-medlem 300 kr
+*(Merk: “Helg” regnes som lørdag og søndag.)*
 
-### Helg
+## Utendørsbaner (sommerhalvåret)
+- **Ikke-medlem:** 100 kr per time (alle tider).
+- **Medlem:** Gratis (0 kr).
 
-* 06:00–08:00: Medlem 100 kr / Ikke-medlem 300 kr
-* 08:00–10:00: Medlem 200 kr / Ikke-medlem 400 kr
-* 10:00–15:00: Medlem 300 kr / Ikke-medlem 500 kr
-* 15:00–20:00: Medlem 200 kr / Ikke-medlem 400 kr
-* 20:00–24:00: Medlem 100 kr / Ikke-medlem 300 kr
+Utebaner er tilgjengelige ca. 15. mai – 15. september hvert år, avhengig av vær og baneforhold.
 
----
+## Avbestilling og refusjon
+- **Enkeltbooking:** Avbestilling må gjøres senest **24 timer før** timen starter for at du skal få refundert leiebeløpet. Avbestilling gjøres via Matchi.
+- **Faste timer (abonnement):** Ved fast ukentlig time kan man avbestille i Matchi inntil 48 timer før for å få beløpet tilgode (refunderes som verdikode i Matchi:contentReference[oaicite:19]{index=19}). Hvis klubben må kansellere en fast time (f.eks. pga. turnering), vil du få kompensasjon tilsvarende timen.
+- **No-show:** Dersom man ikke møter opp til booket time og ikke har avbestilt innen fristen, gis ingen refusjon.
 
-## Uteanlegget (Bleikerveien 64, Asker)
-
-Åpent ca. 1. april – 1. oktober.
-
-* Alle tidspunkter: Medlem gratis / Ikke-medlem 200 kr
-
----
-
-## Avbestilling
-
-* Full refusjon ved kansellering senest 24 timer før timen starter.
-
----
-
-## Åpningstider
-
-* Baneleie: Man–Søn 06:00–24:00
-* Butikk/café: Man–Fre 09:00–17:00, Lør–Søn stengt
-
----
-
-## Kontakt
-
-* Telefon: 902 67 989
-* E-post: [info@askertennis.no](mailto:info@askertennis.no)
-* Vipps: 903600
-* Org.nr.: 971 262 567
-* Juridisk navn: Asker Tennisklubb
-
-## Adresser
-
-* Tennishall: Brages vei 4, 1387 Asker
-* Uteanlegg: Bleikerveien 64, 1387 Asker
+*(Ved spesielle omstendigheter kan administrasjonen vurdere refusjon utover reglene over.)*
