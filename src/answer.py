@@ -22,19 +22,23 @@ SYSTEM_PROMPT = (
     "Hvis kildene ikke dekker spørsmålet, si 'Jeg vet ikke'."
 )
 
-SYN = {
-    "booking": ["booking", "booke", "banebooking", "banereservasjon", "reserver", "bane", "matchi"],
-    "pris": ["pris", "avgift", "timepris", "kostnad", "medlemspris", "drop-in", "billig", "rimelig", "rabatt", "off-peak", "lavsesong"],
-    "tid": ["tid", "tidspunkt", "hverdag", "helg", "dagtid", "kveld", "sesong", "utesesong"],
+# Oppdaterte synonymer og triggere for utvidet søk
+SYN: Dict[str, List[str]] = {
+    "booking": ["booking", "booke", "banebooking", "banereservasjon", "reserver", "bane", "baner", "matchi"],
+    "pris": ["pris", "avgift", "timepris", "kostnad", "kontingent", "medlemskontingent",
+             "drop-in", "billig", "rimelig", "rabatt", "off-peak", "lavsesong"],
     "kontakt": ["kontakt", "telefon", "tlf", "mail", "e-post", "email", "adresse"],
-    "medlemskap": ["medlemskap", "medlem", "innmelding", "bli medlem", "junior", "barn", "voksen", "familie"],
-    "parkering": ["parkering", "p-norge", "parkere", "bil", "easypark", "takstgruppe"],
-    "utstyr": ["utstyr", "racket", "rackets", "leie", "låne", "låner", "utleie", "strengeservice"],
-    "klubbstigen": ["klubbstigen", "stige", "rankingsystem", "app"],
-    "leir": ["leir", "sommerleir", "høstferieleir", "ferieleir", "vinterleir", "camp"]
+    "medlemskap": ["medlemskap", "medlem", "medlemsfordel", "innmelding", "bli medlem",
+                   "junior", "barn", "voksen", "familie"],
+    "parkering": ["parkering", "p-norge", "easypark", "parkere", "bil", "takstgruppe"],
+    "utstyr": ["utstyr", "racket", "racketer", "ball", "baller", "leie utstyr", "låne", "strengeservice"],
+    "klubbstigen": ["klubbstigen", "stige", "rankingsystem", "appen", "liga"],
+    "leir": ["leir", "sommerleir", "høstferieleir", "vinterferie", "camp", "campen"],
+    "info": ["klubb", "anlegg", "hall", "uteanlegg", "medlemmer", "baner", "historie",
+             "stiftet", "leder", "sportslig", "hovedtrener", "daglig"]
 }
 
-DOC_HINTS = {
+DOC_HINTS: Dict[str, List[str]] = {
     "booking": SYN["booking"],
     "pris": SYN["pris"],
     "kontakt": SYN["kontakt"],
@@ -43,23 +47,28 @@ DOC_HINTS = {
     "utstyr": SYN["utstyr"],
     "klubbstigen": SYN["klubbstigen"],
     "leir": SYN["leir"],
+    "info": SYN["info"]
 }
 
 def _expand_query(q: str) -> Tuple[str, Set[str], List[str]]:
+    # Fjern irrelevante ord som klubbnavn
     ql = q.lower()
+    ql = re.sub(r"\basker tennisklubb\b|\basker tennis\b", " ", ql)
+    ql = ql.strip()
+
     extra: List[str] = []
     preferred: Set[str] = set()
 
-    # legg til doc hints (hvilken type dokument som skal foretrekkes)
+    # Legg til doc hints basert på triggere
     for dt, triggers in DOC_HINTS.items():
         if any(t in ql for t in triggers):
             preferred.add(dt)
-
-    # legg til query expansions (ekstra søkeord)
+    # Legg til utvidede søkeord (synonymer) basert på synonymlistene
     for key, words in SYN.items():
         if any(t in ql for t in words):
             extra += words
 
+    # Bygg utvidet spørring
     expanded = q if not extra else q + " " + " ".join(sorted(set(extra)))
     return expanded, preferred, sorted(set(extra))
 
@@ -77,10 +86,11 @@ def _score(h: Dict, keys: List[str], preferred: Set[str]) -> float:
     base = float(h.get("score", 0.0))
     bonus = 0.15 if h.get("doc_type") in preferred else 0.0
     txt = (h.get("text") or "").lower()
+    # Bonus for hvert nøkkelord som faktisk forekommer i dokumentteksten
     bonus += min(0.10, 0.02 * sum(1 for t in keys if t in txt))
     return base + bonus
 
-def _rerank(hits: List[Dict], preferred: Set[str], keys: List[str], k: int, min_score: float = 0.18) -> List[Dict]:
+def _rerank(hits: List[Dict], preferred: Set[str], keys: List[str], k: int, min_score: float = 0.15) -> List[Dict]:
     scored = [(h, _score(h, keys, preferred)) for h in hits]
     scored.sort(key=lambda x: x[1], reverse=True)
     good = [h for h, s in scored if s >= min_score]
@@ -89,11 +99,26 @@ def _rerank(hits: List[Dict], preferred: Set[str], keys: List[str], k: int, min_
 def _llm(q: str, hits: List[Dict]) -> str:
     if _openai is None:
         return _extractive(hits)
+    # Bygg kontekst av topp 5 utdrag
     ctx = "\n\n".join(f"Utdrag {i+1}:\n{h.get('text','')}" for i, h in enumerate(hits[:5]))
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Spørsmål: {q}\n\nKontekst:\n{ctx}\n\nInstruks: Svar med egne ord i 1–3 setninger."},
-    ]
+    # Inkluder tidligere meldinger for kontekst (fra session_state via streamlit)
+    history_msgs = []
+    try:
+        import streamlit as st
+        for prev_q, prev_a in st.session_state.get("history", [])[-3:]:  # siste 3 meldinger
+            # Fjern prefix "Spørsmål:" fra lagret historikkinnlegg
+            uq = prev_q.replace("**Spørsmål:**", "Spørsmål:").strip()
+            history_msgs.append({"role": "user", "content": uq})
+            history_msgs.append({"role": "assistant", "content": prev_a})
+    except Exception:
+        history_msgs = []
+    # Bygg meldingsliste til OpenAI chat-komplettering
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages += history_msgs
+    messages.append({
+        "role": "user",
+        "content": f"Spørsmål: {q}\n\nKontekst:\n{ctx}\n\nInstruks: Svar med egne ord i 1–3 setninger."
+    })
     try:
         r = _openai.chat.completions.create(model=CHAT_MODEL, messages=messages, temperature=0.2, max_tokens=120)
         return (r.choices[0].message.content or "").strip()
@@ -102,10 +127,10 @@ def _llm(q: str, hits: List[Dict]) -> str:
 
 def answer(q: str, k: int = 6) -> Tuple[str, List[Dict]]:
     qx, preferred, keys = _expand_query(q)
-    raw = search(qx, max(k * 2, 6))
-    hits = _rerank(raw, preferred, keys, k)
+    raw_hits = search(qx, max(k * 2, 6))
+    hits = _rerank(raw_hits, preferred, keys, k)
     if not hits:
-        return "Jeg vet ikke", raw[:k]
+        return "Jeg vet ikke", raw_hits[:k]
     out = _llm(q, hits) if USE_OPENAI and _openai is not None else _extractive(hits)
     if not out or len(out.split()) < 2:
         out = "Jeg vet ikke"
