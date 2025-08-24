@@ -230,3 +230,37 @@ def build_index(kb_dir: str | Path = KB_DIR_DEFAULT) -> None:
         _save_meta(chunks)
         _maybe_write_faiss(vectors)
         print(f"[ingest] TF-IDF vektorer for {len(chunks)} biter skrevet til {DATA_DIR}/vectors.npy og {DATA_DIR}/meta.jsonl.")
+
+
+def _save_embeddings(emb_list, meta_rows):
+    """
+    emb_list: liste[ liste[float] ] eller np.ndarray med form (N, D)
+    meta_rows: liste[dict] med samme N
+    """
+    # 1) Gjør om til tett 2D‑matrise i float32 (garanterer ingen pickle)
+    X = np.asarray(emb_list, dtype=np.float32)
+    if X.ndim != 2:
+        raise ValueError(f"Forventet 2D embeddings, fikk shape={X.shape}")
+
+    # 2) Lagre deterministisk, uten pickle
+    EMB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    np.save(EMB_PATH, X)  # -> ren .npy (ikke pickle)
+
+    # 3) Lagre meta rad‑for‑rad (enkel å lese/stream’e)
+    with META_PATH.open("w", encoding="utf-8") as f:
+        for row in meta_rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def main():
+    # ... bygg emb_list og meta_rows her
+    # emb_list = [[...], [...], ...]  # alle D like lange
+    # meta_rows = [{"title": "...", "source": "...", ...}, ...]
+    # >>> fyll inn din eksisterende pipeline <<<
+    emb_list, meta_rows = build_everything()  # eksisterende funksjon i ditt repo
+
+    _save_embeddings(emb_list, meta_rows)
+
+
+if __name__ == "__main__":
+    main()
