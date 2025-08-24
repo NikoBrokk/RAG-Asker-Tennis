@@ -4,10 +4,13 @@ from pathlib import Path
 import faiss
 import numpy as np
 
-# Artefaktstier
-INDEX_PATH = Path("data/index.faiss")
-VEC_PATH = Path("data/vectors.npy")
-META_PATH = Path("data/meta.jsonl")
+
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+INDEX_PATH = DATA_DIR / "index.faiss"
+VEC_PATH   = DATA_DIR / "vectors.npy"
+META_PATH  = DATA_DIR / "meta.jsonl"
 
 # Bygger hele indeksen (vectors.npy, meta.jsonl, index.faiss) hvis mangler
 # hentes fra src.ingest.build_index
