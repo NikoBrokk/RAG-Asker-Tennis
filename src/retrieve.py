@@ -154,7 +154,7 @@ def _load_corpus() -> List[Dict]:
                 if not txt.strip():
                     continue
                 txt_clean = _strip_markdown_noise(txt)
-                 source_raw = meta.get("source")
+                source_raw = meta.get("source")
                 title = meta.get("title") or _title_from_markdown(
                     txt,
                     Path(source_raw or p.stem).stem,
