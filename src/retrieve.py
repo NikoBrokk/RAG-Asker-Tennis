@@ -154,9 +154,13 @@ def _load_corpus() -> List[Dict]:
                 if not txt.strip():
                     continue
                 txt_clean = _strip_markdown_noise(txt)
-                title = meta.get("title") or _title_from_markdown(txt, Path(meta.get("source", p.stem)).stem)
+                 source_raw = meta.get("source")
+                title = meta.get("title") or _title_from_markdown(
+                    txt,
+                    Path(source_raw or p.stem).stem,
+                )
                 doc_type = meta.get("doc_type") or _infer_doc_type(title, txt)
-                src = (meta.get("source") or source_path).replace("\\", "/")
+                src = (source_raw or source_path).replace("\\", "/")
                 page = meta.get("page")
                 docs.append({
                     "text": txt_clean,
