@@ -24,6 +24,10 @@ from openai import OpenAI
 
 load_dotenv()
 
+DATA_DIR = Path("data")
+EMB_PATH = DATA_DIR / "vectors.npy"
+META_PATH = DATA_DIR / "meta.jsonl"
+
 def _get_secret(name: str) -> str | None:
     """
     Hent verdi fra miljøvariabel eller Streamlit Secrets – trygt i CI.
