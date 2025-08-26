@@ -1,1 +1,3 @@
-{"text": "dummy", "metadata": {"title": "Dummy", "source": "dummy.md"}}
+{"text": "vector one", "metadata": {"title": "Vec1", "source": "dummy1.md"}}
+{"text": "vector two", "metadata": {"title": "Vec2", "source": "dummy2.md"}}
+{"text": "vector three", "metadata": {"title": "Vec3", "source": "dummy3.md"}}
