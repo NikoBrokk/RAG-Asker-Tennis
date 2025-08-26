@@ -255,6 +255,21 @@ def _save_embeddings(emb_list, meta_rows):
         for row in meta_rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
+# --- Stub pipeline hook ---------------------------------------------------
+def build_everything() -> Tuple[List[List[float]], List[Dict]]:
+    """Return embeddings and metadata for the knowledge base.
+
+    This project‑specific function is intentionally left unimplemented so that
+    tests can monkeypatch it.  In production you would replace it with the
+    actual pipeline that constructs ``emb_list`` and ``meta_rows``.
+    """
+
+    raise NotImplementedError("build_everything must be provided by the project")
+
+
+# Some older tests expect ``tweak_everything``; keep it as an alias.
+tweak_everything = build_everything
+
 
 def main():
     # ... bygg emb_list og meta_rows her
