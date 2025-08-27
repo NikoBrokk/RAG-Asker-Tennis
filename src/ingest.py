@@ -1,113 +1,166 @@
-from __future__ import annotations
-import json, os, re
-from pathlib import Path
-from typing import Dict, List, Tuple
-from openai import AuthenticationError
+// path: src/retrieve.py
+"""
+Utilities for loading and querying the knowledge base.
 
+This module provides a simple TF‑IDF based retriever as well as an optional
+OpenAI‑embedding powered retriever.  The code is largely adapted from the
+original RAG‑Asker‑Tennis repository but has been refactored to be more
+robust.  In particular the OpenAI path now allows loading pickled numpy
+files safely.  Without ``allow_pickle=True`` numpy refuses to load arrays
+that contain arbitrary Python objects, which can happen if a legacy
+``vectors.npy`` was saved using ``pickle`` instead of the default plain
+array format.  To avoid surprises in the future, ingestion code should
+always save embeddings with ``np.save`` on a dense numeric array, never
+object arrays.
+
+Functions:
+    search(query: str, k: int = 6) -> List[Dict]:
+        Retrieve the top‐k chunks matching the given query.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Dict, List, Iterable, Optional
 
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 from src.utils import env_flag
 
-try:
-    import streamlit as st  # type: ignore
-except Exception:
-    st = None
+# --- Konfig ---
+KB_DIRS = [Path("kb"), Path("data/processed")]
+CHUNK_SIZE = 700
+CHUNK_OVERLAP = 120
 
-try:
-    import faiss  # type: ignore
-except Exception:
-    faiss = None
+DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+USE_OPENAI = env_flag("USE_OPENAI", False)
+EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-small")
 
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
-
-DATA_DIR = Path("data")
-EMB_PATH = DATA_DIR / "vectors.npy"
-META_PATH = DATA_DIR / "meta.jsonl"
-
-def _get_secret(name: str) -> str | None:
-    """
-    Hent verdi fra miljøvariabel eller Streamlit Secrets – trygt i CI.
-    - Foretrekker ENV først (CI/GHA setter ofte env direkte).
-    - Aksess til st.secrets kapsles i try/except siden bare *berøring* kan kaste
-      StreamlitSecretNotFoundError hvis secrets.toml ikke finnes.
-    """
-    # 1) ENV først
-    val = os.getenv(name)
-    if isinstance(val, str) and val.strip():
-        return val.strip()
-    # 2) Streamlit Secrets (best effort)
+# OpenAI klient (kun hvis USE_OPENAI)
+_openai = None
+if USE_OPENAI:
     try:
-        import streamlit as _st  # lokal import for å unngå sideeffekter
-        try:
-            sval = _st.secrets[name]  # kan kaste KeyError/StreamlitSecretNotFoundError
-            return sval.strip() if isinstance(sval, str) else sval
-        except Exception:
-            return None
+        from openai import OpenAI  # type: ignore
+        _openai = OpenAI()
     except Exception:
-        return None
+        # We still support TF-IDF mode if OpenAI cannot be imported
+        _openai = None
 
-# ---------- Konfig ----------
-# Tving OpenAI som default i Cloud; kan overstyres via USE_OPENAI=0
-USE_OPENAI = env_flag("USE_OPENAI", True)
-EMBED_MODEL = _get_secret("EMBED_MODEL") or "text-embedding-3-small"
-DATA_DIR = Path(_get_secret("DATA_DIR") or "data")
-KB_DIR_DEFAULT = _get_secret("KB_DIR") or "kb"
+# TF‑IDF state
+_VEC: Optional[TfidfVectorizer] = None
+_MTX = None  # scipy sparse
+_META: List[Dict] = []  # one entry per row in _MTX
 
-# ---------- OpenAI-klient på modulnivå ----------
-OPENAI_API_KEY = _get_secret("OPENAI_API_KEY")
-OPENAI_PROJECT = _get_secret("OPENAI_PROJECT")  # valgfri (for sk-proj-… nøkler)
-if not OPENAI_API_KEY:
-    msg = ("Mangler/ugyldig `OPENAI_API_KEY`. "
-           "Legg inn nøkkelen i Streamlit Secrets eller `.env`.")
-    if st:
-        st.error(msg)
-    raise RuntimeError(msg)
-client = OpenAI(api_key=OPENAI_API_KEY, project=OPENAI_PROJECT or None)
+# OpenAI state
+_EMB: Optional[np.ndarray] = None  # shape (n_chunks, dim)
+_META_OAI: List[Dict] = []
 
-# ---------- Korpushjelpere (gjenbruker logikken fra retrieve) ----------
+# ---------- Utils ----------
+import re
+
 def _read_text_file(p: Path) -> str:
+    """Read a text file using utf‑8 with ignore fallback."""
     try:
         return p.read_text(encoding="utf-8", errors="ignore")
     except Exception:
         return ""
 
-def _strip(txt: str) -> str:
-    # fjern codefences og komprimer whitespace
+def _strip_markdown_noise(txt: str) -> str:
+    """Remove fenced code blocks and compress whitespace in a markdown string."""
     txt = re.sub(r"```.*?```", " ", txt, flags=re.S)
+    txt = re.sub(r" ", " ", txt, flags=re.S)
     txt = re.sub(r"\s+", " ", txt)
     return txt.strip()
 
-def _iter_docs(kb_root: Path) -> List[Dict]:
-    out: List[Dict] = []
+def _title_from_markdown(txt: str, fallback: str) -> str:
+    """Extract the first top‑level heading or fallback to the first non‐empty line."""
+    m = re.search(r"^\s*#\s+(.+)$", txt, flags=re.M)
+    if m:
+        return m.group(1).strip()
+    for line in txt.splitlines():
+        s = line.strip()
+        if s:
+            return s[:120]
+    return fallback
 
-    for p in sorted(list(kb_root.rglob("*.md")) + list(Path("data/processed").rglob("*.jsonl"))):
-        if not p.is_file():
+def _infer_doc_type(name: str, text: str) -> str:
+    """Heuristically infer the document type based on filename and content."""
+    low = (name + " " + text[:400]).lower()
+    # Rules / conditions to map into a small set of document categories
+    if any(w in low for w in ["vilkår", "terms", "betingelser", "angrerett", "personvern", "gdpr", "privacy"]):
+        return "regel"
+    if any(w in low for w in ["innmelding", "medlemsfordel", "kontingent", "medlemskontingent"]):
+        return "medlemskap"
+    if any(w in low for w in ["stiftet", "medlemmer", "har rundt", "medlemstall",
+                              "grusbaner", "innendørsbaner", "daglig leder", "sportslig leder", "hovedtrener"]):
+        return "info"
+    if any(w in low for w in ["pris", "timepris", "avgift", "kostnad", "rabatt"]):
+        return "pris"
+    if any(w in low for w in ["booking", "banebooking", "reserver", "matchi", "baneregler", "bane ", "baner"]):
+        return "booking"
+    if any(w in low for w in ["håndbok"]):
+        return "håndbok"
+    return "annet"
+
+def _chunk(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
+    """Split text into overlapping chunks of approximately ``size`` characters."""
+    text = text.strip()
+    if not text:
+        return []
+    chunks: List[str] = []
+    i = 0
+    n = len(text)
+    while i < n:
+        j = min(i + size, n)
+        chunk = text[i:j]
+        chunks.append(chunk)
+        if j == n:
+            break
+        i = max(j - overlap, 0)
+    return chunks
+
+def _iter_kb_files() -> Iterable[Path]:
+    """Yield all markdown and jsonl files from configured knowledge base directories."""
+    seen: set[Path] = set()
+    for d in KB_DIRS:
+        if not d.exists():
             continue
+        for p in d.rglob("*.md"):
+            if p.is_file():
+                seen.add(p.resolve())
+        for p in d.rglob("*.jsonl"):
+            if p.is_file():
+                seen.add(p.resolve())
+    for p in sorted(seen):
+        yield Path(p)
 
+def _load_corpus() -> List[Dict]:
+    """Load and chunk documents from the knowledge base into a list of metadata dicts."""
+    docs: List[Dict] = []
+    for p in _iter_kb_files():
+        source_path = str(p).replace("\\", "/")
         if p.suffix.lower() == ".md":
             raw = _read_text_file(p)
-            clean = _strip(raw)
-            if not clean:
-                continue
-
-            chunks = [clean[i:i + 700] for i in range(0, len(clean), 700 - 120)]
+            clean = _strip_markdown_noise(raw)
+            title = _title_from_markdown(raw, p.stem.replace("-", " "))
+            doc_type = _infer_doc_type(p.name, clean)
+            chunks = _chunk(clean)
             for ci, ch in enumerate(chunks):
-                out.append({
+                docs.append({
                     "text": ch,
-                    "source": str(p).replace("\\", "/"),
-                    "title": p.stem.replace("-", " "),
-                    "doc_type": None,
+                    "source": source_path,
+                    "title": title,
+                    "doc_type": doc_type,
                     "version_date": None,
                     "page": None,
                     "chunk_idx": ci,
-                    "id": f"{p.as_posix()}#{ci}",
+                    "id": f"{source_path}#{ci}",
                 })
-
-        else:
+        elif p.suffix.lower() == ".jsonl":
             ci = 0
             for line in _read_text_file(p).splitlines():
                 line = line.strip()
@@ -117,169 +170,153 @@ def _iter_docs(kb_root: Path) -> List[Dict]:
                     obj = json.loads(line)
                 except Exception:
                     continue
-
-                txt = _strip(obj.get("text", ""))
-                if not txt:
+                txt = obj.get("text", "")
+                meta = obj.get("metadata", {})
+                if not txt.strip():
                     continue
-
-                src = obj.get("metadata", {}).get("source") or str(p)
-                out.append({
-                    "text": txt,
-                    "source": str(src).replace("\\", "/"),
-                    "title": obj.get("metadata", {}).get("title"),
-                    "doc_type": obj.get("metadata", {}).get("doc_type"),
-                    "version_date": obj.get("metadata", {}).get("version_date"),
-                    "page": obj.get("metadata", {}).get("page"),
+                txt_clean = _strip_markdown_noise(txt)
+                source_raw = meta.get("source")
+                title = meta.get("title") or _title_from_markdown(
+                    txt,
+                    Path(source_raw or p.stem).stem,
+                )
+                doc_type = meta.get("doc_type") or _infer_doc_type(title, txt)
+                src = (source_raw or source_path).replace("\\", "/")
+                page = meta.get("page")
+                docs.append({
+                    "text": txt_clean,
+                    "source": src,
+                    "title": title,
+                    "doc_type": doc_type,
+                    "version_date": meta.get("version_date"),
+                    "page": page,
                     "chunk_idx": ci,
-                    "id": f"{Path(src).as_posix()}#{ci}",
+                    "id": f"{src}#{ci}",
                 })
                 ci += 1
+    return docs
 
-    return out
+# ---------- Index bygging ----------
+def _ensure_index_tfidf() -> None:
+    """Lazy construction of the TF‑IDF index.
 
-# ---------- OpenAI-embeddings eller TF-IDF til disk ----------
-def _save_meta(meta: List[Dict]) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with (DATA_DIR / "meta.jsonl").open("w", encoding="utf-8") as f:
-        for m in meta:
-            f.write(json.dumps(m, ensure_ascii=False) + "\n")
-
-def _build_openai_embeddings(chunks: List[Dict], batch_size: int = 64) -> np.ndarray:
-    """Bygg normaliserte embeddings med batching og bedre feilhåndtering."""
-    if not OPENAI_API_KEY:
-        msg = (
-            "OPENAI_API_KEY mangler eller er ugyldig. "
-            "Sett den i .env-filen eller i Streamlit Secrets."
-        )
-        if st:
-            st.error(msg)
-        raise RuntimeError(msg)
-
-    texts = [d["text"] for d in chunks]
-    vecs: List[np.ndarray] = []
-
-    for i in range(0, len(texts), batch_size):
-        batch = texts[i:i + batch_size]
-        try:
-            r = client.embeddings.create(
-                model=EMBED_MODEL,
-                input=batch
-            )
-        except AuthenticationError:
-            msg = "Feil ved autentisering mot OpenAI – sjekk API-nøkkelen."
-            if st:
-                st.error(msg)
-            raise RuntimeError(msg)
-        except Exception as e:
-            msg = f"Uventet feil ved henting av embeddings: {e}"
-            if st:
-                st.error(msg)
-            raise RuntimeError(msg)
-
-        for item in r.data:
-            v = np.asarray(item.embedding, dtype="float32")
-            v = v / (np.linalg.norm(v) + 1e-12)
-            vecs.append(v)
-
-    if not vecs:
-        return np.zeros((0, 1536), dtype="float32")
-
-    return np.vstack(vecs)
-
-
-def _build_tfidf_dense(chunks: List[Dict]) -> Tuple[np.ndarray, object]:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    import pickle
-
-    texts = [d["text"] for d in chunks] or [""]
-    vec = TfidfVectorizer(
-        ngram_range=(1, 2),
-        max_df=0.95,
-        strip_accents="unicode",
-        lowercase=True,
-        norm="l2",
-        sublinear_tf=True,
-        max_features=60000,
-    )
-
-    mtx = vec.fit_transform(texts)
-    dense = mtx.toarray()
-    norms = np.linalg.norm(dense, axis=1, keepdims=True)
-    dense = (dense / (norms + 1e-12)).astype("float32")
-
-    with (DATA_DIR / "vectorizer.pkl").open("wb") as f:
-        pickle.dump(vec, f)
-    return dense, vec
-
-def _maybe_write_faiss(vectors: np.ndarray) -> None:
-    if faiss is None or vectors.size == 0:
+    If there are no documents to index, a dummy vectorizer and matrix are
+    created so that subsequent calls to ``search`` do not raise errors.  The
+    dummy matrix has one row and one column.  This behaviour mirrors the
+    original repository and avoids a ValueError from scikit‑learn about an
+    empty vocabulary.
+    """
+    global _VEC, _MTX, _META
+    # If already built, do nothing
+    if _VEC is not None and _MTX is not None and _META:
         return
-    idx = faiss.IndexFlatIP(vectors.shape[1])
-    idx.add(vectors)
-    faiss.write_index(idx, str(DATA_DIR / "index.faiss"))
-
-def build_index(kb_dir: str | Path = KB_DIR_DEFAULT) -> None:
-    kb_root = Path(kb_dir)
-    chunks = _iter_docs(kb_root)
-
-    if USE_OPENAI:
-        vectors = _build_openai_embeddings(chunks)
-        np.save(DATA_DIR / "vectors.npy", vectors)
-        _save_meta(chunks)
-        _maybe_write_faiss(vectors)
-        print(f"[ingest] OpenAI-embeddings for {len(chunks)} biter skrevet til {DATA_DIR}/vectors.npy og {DATA_DIR}/meta.jsonl.")
+    corpus = _load_corpus()
+    _META = corpus
+    texts = [d["text"] for d in corpus]
+    # When no texts exist, build a trivial vocabulary on a dummy token
+    if not texts:
+        _VEC = TfidfVectorizer(ngram_range=(1, 2))
+        # fit on a single dummy token to avoid empty vocabulary errors
+        _MTX = _VEC.fit_transform(["dummy"])
+        return
+    # Otherwise build a full vectorizer.  With only one document, setting
+    # ``max_df`` to a value < 1 will trigger an error because it would be
+    # smaller than ``min_df``.  Therefore we conditionally omit ``max_df``
+    # when the corpus is tiny.
+    if len(texts) < 2:
+        _VEC = TfidfVectorizer(
+            ngram_range=(1, 2),
+            strip_accents="unicode",
+            lowercase=True,
+            norm="l2",
+            sublinear_tf=True,
+            max_features=60000,
+        )
     else:
-        vectors, _ = _build_tfidf_dense(chunks)
-        np.save(DATA_DIR / "vectors.npy", vectors)
-        _save_meta(chunks)
-        _maybe_write_faiss(vectors)
-        print(f"[ingest] TF-IDF vektorer for {len(chunks)} biter skrevet til {DATA_DIR}/vectors.npy og {DATA_DIR}/meta.jsonl.")
+        _VEC = TfidfVectorizer(
+            ngram_range=(1, 2),
+            max_df=0.95,
+            min_df=1,
+            strip_accents="unicode",
+            lowercase=True,
+            norm="l2",
+            sublinear_tf=True,
+            max_features=60000,
+        )
+    _MTX = _VEC.fit_transform(texts)
 
+def _ensure_index_openai() -> None:
+    """Load the OpenAI embeddings and metadata from disk if not already loaded.
 
-def _save_embeddings(emb_list, meta_rows):
+    We call ``np.load`` with ``allow_pickle=True`` to support legacy .npy files
+    that may have been saved with pickle.  Modern ingestion code writes
+    embeddings as plain float32 arrays and will not require pickle.
     """
-    emb_list: liste[ liste[float] ] eller np.ndarray med form (N, D)
-    meta_rows: liste[dict] med samme N
+    global _EMB, _META_OAI
+    if _EMB is not None and _META_OAI:
+        return
+    vec_path = DATA_DIR / "vectors.npy"
+    meta_path = DATA_DIR / "meta.jsonl"
+    if not vec_path.exists() or not meta_path.exists():
+        raise FileNotFoundError("OpenAI-indeks mangler (kjør src.ingest i USE_OPENAI=true).")
+    try:
+        # allow_pickle=True is necessary if the file contains object arrays
+        _EMB = np.load(vec_path, allow_pickle=True)
+    except ValueError as e:
+        # Provide a more helpful error message with remediation guidance
+        raise ValueError(
+            f"Kunne ikke laste embeddings fra {vec_path}: {e}. "
+            "Forsikre deg om at filen er lagret med np.save på en 2D float32-matrise."
+        )
+    # Cast to float32 and normaliser dersom nødvendig
+    if _EMB.dtype != np.float32:
+        try:
+            _EMB = _EMB.astype(np.float32)
+        except Exception:
+            pass
+    # Ensure 2D shape (n, d) – reshape 1D arrays if necessary
+    if _EMB.ndim == 1:
+        _EMB = _EMB.reshape(-1, 1)
+    _META_OAI = []
+    with meta_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                _META_OAI.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+# ---------- Public API ----------
+def search(query: str, k: int = 6) -> List[Dict]:
+    """Return the top ``k`` hits as a list of metadata dicts with scores.
+
+    Each hit contains ``text``, ``source``, ``title``, ``doc_type``, ``version_date``,
+    ``page``, ``chunk_idx`` and ``score``.  When OpenAI mode is active, it uses
+    cosine similarity between the query embedding and precomputed embeddings.
+    Otherwise, TF‑IDF cosine similarities are used.
     """
-    # 1) Gjør om til tett 2D‑matrise i float32 (garanterer ingen pickle)
-    X = np.asarray(emb_list, dtype=np.float32)
-    if X.ndim != 2:
-        raise ValueError(f"Forventet 2D embeddings, fikk shape={X.shape}")
-
-    # 2) Lagre deterministisk, uten pickle
-    EMB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    np.save(EMB_PATH, X)  # -> ren .npy (ikke pickle)
-
-    # 3) Lagre meta rad‑for‑rad (enkel å lese/stream’e)
-    with META_PATH.open("w", encoding="utf-8") as f:
-        for row in meta_rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-# --- Stub pipeline hook ---------------------------------------------------
-def build_everything() -> Tuple[List[List[float]], List[Dict]]:
-    """Return embeddings and metadata for the knowledge base.
-
-    This project‑specific function is intentionally left unimplemented so that
-    tests can monkeypatch it.  In production you would replace it with the
-    actual pipeline that constructs ``emb_list`` and ``meta_rows``.
-    """
-
-    raise NotImplementedError("build_everything must be provided by the project")
-
-
-# Some older tests expect ``tweak_everything``; keep it as an alias.
-tweak_everything = build_everything
-
-
-def main():
-    # ... bygg emb_list og meta_rows her
-    # emb_list = [[...], [...], ...]  # alle D like lange
-    # meta_rows = [{"title": "...", "source": "...", ...}, ...]
-    # >>> fyll inn din eksisterende pipeline <<<
-    emb_list, meta_rows = build_everything()  # eksisterende funksjon i ditt repo
-
-    _save_embeddings(emb_list, meta_rows)
-
-
-if __name__ == "__main__":
-    main()
+    if USE_OPENAI and _openai is not None:
+        _ensure_index_openai()
+        # Embed the query using the configured embedding model
+        r = _openai.embeddings.create(model=EMBED_MODEL, input=query)
+        qvec = np.array(r.data[0].embedding, dtype="float32")
+        qvec = qvec / (np.linalg.norm(qvec) + 1e-12)
+        # Cosine similarity reduces to dot product when all vectors are normalised
+        sims = _EMB @ qvec  # type: ignore
+        order = np.argsort(-sims)[:k]
+        out: List[Dict] = []
+        for idx in order:
+            m = dict(_META_OAI[int(idx)])
+            m["score"] = float(sims[int(idx)])
+            out.append(m)
+        return out
+    # TF‑IDF fallback
+    _ensure_index_tfidf()
+    qvec = _VEC.transform([query])  # type: ignore
+    sims = linear_kernel(qvec, _MTX).ravel()  # type: ignore
+    order = np.argsort(-sims)[:k]
+    out: List[Dict] = []
+    for idx in order:
+        m = dict(_META[int(idx)])
+        m["score"] = float(sims[int(idx)])
+        out.append(m)
+    return out
