@@ -1,4 +1,4 @@
-// path: src/index.py
+
 """
 FAISS index helper functions.
 
