@@ -1,4 +1,4 @@
-// path: src/retrieve.py
+
 """
 Utilities for loading and querying the knowledge base.
 
